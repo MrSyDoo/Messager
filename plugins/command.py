@@ -48,7 +48,6 @@ async def handle_text_command(client: Client, message: Message):
     else:
         session = accounts[0]["session"]
 
-    # Ask for message
     try:
         user_msg = await client.ask(
             chat_id=user_id,
@@ -91,7 +90,7 @@ async def add_account_handler(client: Client, message: Message):
 
     
     try:
-        metadata = await client.ask(
+        sessin = await client.ask(
             text="Please send your **Telethon StringSession**.\n\nTimeout in 30 seconds.",
             chat_id=user_id,
             filters=filters.text,
@@ -118,7 +117,7 @@ async def add_account_handler(client: Client, message: Message):
             reply_to_message_id=message.id
         )
 
-    string = metadata.text.strip()
+    string = sessin.text.strip()
     text = usmsg.text
     try:
         async with TelegramClient(StringSession(string), API_ID, API_HASH) as userbot:
@@ -131,10 +130,9 @@ async def add_account_handler(client: Client, message: Message):
         return
 
     existing_group = await db.group.find_one({"_id": me.id})
-    await message.reply(f"This account is already added. {existing_group}")
-    #if existing_group:
-        #return await message.reply("This account is already added.")
-    # Save to DB
+    if existing_group:
+        return await message.reply("This account is already added.")
+    
     if not user:
         user = {"_id": user_id, "accounts": []}
 
