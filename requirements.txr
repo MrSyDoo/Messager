@@ -1,0 +1,11 @@
+pyrogram==2.0.80
+telethon
+TgCrypto
+motor
+#pyrofork
+dnspython
+Pillow
+aiohttp
+pytz
+pyromod
+psutil
