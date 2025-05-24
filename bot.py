@@ -42,8 +42,8 @@ class Bot(Client):
                 link = await self.export_chat_invite_link(Config.FORCE_SUB)
                 self.invitelink = link
             except Exception as e:
-                logging.warning(e)
-                logging.warning("Make Sure Bot admin in force sub channel")
+                print(e)
+                print("Make Sure Bot admin in force sub channel")
                 self.force_channel = None
         if Config.WEBHOOK:
             app = web.AppRunner(await web_server())
@@ -73,7 +73,7 @@ class Bot(Client):
 
     async def stop(self, *args):
         await super().stop()
-        logging.info("Bot Stopped 🙄")
+        print("Bot Stopped 🙄")
         
     
 bot = Bot()
