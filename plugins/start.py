@@ -133,9 +133,8 @@ async def start_forwarding(client, user_id):
             for grp in groups:
                 gid = grp["id"]
                 topic_id = grp.get("topic_id")
-                interval = 7200 if not is_premium else user.get("interval", 300)
+                interval = grp.get("interval", 7200 if not is_premium else 300)
                 last_sent = grp.get("last_sent", datetime.min)
-
                 total_wait = interval - (datetime.now() - last_sent).total_seconds()
                 if total_wait > 0:
                     for _ in range(int(total_wait)):
@@ -195,12 +194,10 @@ async def start(client, message):
 async def stop_forwarding(client, message):
     user_id = message.from_user.id
     await db.update_user(user_id, {"enabled": False})
-
     if user_id in sessions:
         for tele_client in sessions[user_id]:
             await tele_client.disconnect()
         sessions.pop(user_id)
-
     await message.reply("Trying To Stop.")
     
 @Client.on_message(filters.command("run") & filters.private)
@@ -228,7 +225,6 @@ async def run_forarding(client, message):
         await tele_client.start()
         clients.append(tele_client)
 
-        # Get the account's own user ID to fetch groups from group collection
         me = await tele_client.get_me()
         session_user_id = me.id
         username = f"For @{message.from_user.username}" if message.from_user.username else " "
@@ -300,7 +296,7 @@ async def run_forarding(client, message):
             for grp in groups:
                 gid = grp["id"]
                 topic_id = grp.get("topic_id")
-                interval = 10 if not is_premium else user.get("interval", 300)
+                interval = grp.get("interval", 7200 if not is_premium else 300)
                 last_sent = grp.get("last_sent", datetime.min)
                 total_wait = interval - (datetime.now() - last_sent).total_seconds()
                 if total_wait > 0:
