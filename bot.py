@@ -1,5 +1,4 @@
-import logging
-import logging.config
+
 import warnings
 from pyrogram import Client, idle, filters
 from pyrogram import Client, __version__
@@ -17,17 +16,12 @@ from time import sleep
 import pyromod
 
 
-logging.config.fileConfig('logging.conf')
-logging.getLogger().setLevel(logging.INFO)
-logging.getLogger("pyrogram").setLevel(logging.ERROR)
-logging.getLogger("pymongo").setLevel(logging.ERROR)
-
 
 class Bot(Client):
 
     def __init__(self):
         super().__init__(
-            name="SnowRenamer",
+            "AddBot",
             api_id=Config.API_ID,
             api_hash=Config.API_HASH,
             bot_token=Config.BOT_TOKEN,
@@ -56,7 +50,7 @@ class Bot(Client):
             await app.setup()
             bind_address = "0.0.0.0"
             await web.TCPSite(app, bind_address, Config.PORT).start()
-        logging.info(f"{me.first_name} ✅✅ BOT started successfully ✅✅")
+        print(f"{me.first_name} ✅✅ BOT started successfully ✅✅")
 
         for id in Config.ADMIN:
             try:
