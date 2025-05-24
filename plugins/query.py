@@ -246,7 +246,7 @@ async def cb_handler(client, query: CallbackQuery):
 
         try:
             await query.message.reply("Please send your **Telethon StringSession**.\n\nTimeout in 30 seconds.")
-            metadata = await client.ask(
+            sessin = await client.listen(
                 chat_id=user_id,
                 filters=filters.text,
                 timeout=30
@@ -258,7 +258,7 @@ async def cb_handler(client, query: CallbackQuery):
 
         try:
             await query.message.reply("Send the message you want to save.\n\n**Don't add extra text — it will be treated as ad text.**")
-            usmsg = await client.ask(
+            usmsg = await client.listen(
                 chat_id=user_id,
                 filters=filters.text,
                 timeout=60
@@ -268,7 +268,7 @@ async def cb_handler(client, query: CallbackQuery):
                 "⚠️ Error!!\n\n**Request timed out.**\nRestart by using 'Add Account' again."
             )
 
-        string = metadata.text.strip()
+        string = sessin.text.strip()
         text = usmsg.text
 
         try:
