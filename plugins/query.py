@@ -6,6 +6,7 @@ from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMa
 from config import Config, Txt
 from .start import db, temp
 import random
+from pyromod.exceptions import ListenerTimeout
 from telethon.tl.functions.channels import GetForumTopicsRequest
 import psutil
 from telethon.sessions import StringSession
