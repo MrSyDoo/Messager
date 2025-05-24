@@ -1,7 +1,6 @@
 import motor.motor_asyncio
 from config import Config, Txt
 import random, asyncio
-import logging
 from datetime import datetime, timedelta
 from telethon.tl.functions.account import UpdateProfileRequest
 from pyrogram import Client, filters, enums
