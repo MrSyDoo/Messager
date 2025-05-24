@@ -17,12 +17,9 @@ from datetime import datetime
 
 async def toggle_group_directly(tg_client, user, group_id, session_user_id, query, account_index):
     from datetime import datetime
-
     group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
     group_list = group_data["groups"]
-
     exists = next((g for g in group_list if g["id"] == group_id), None)
-
     if exists:
         group_list.remove(exists)
         status = "❌"
@@ -43,9 +40,7 @@ async def toggle_group_directly(tg_client, user, group_id, session_user_id, quer
 
 async def show_groups_for_account(client, message, user_id, account_index):
     user = await db.get_user(user_id)
-    
     session_str = user["accounts"][account_index]["session"]
-    
     async with TelegramClient(StringSession(session_str), Config.API_ID, Config.API_HASH) as tg_client:
         me = await tg_client.get_me()
         
@@ -57,8 +52,8 @@ async def show_groups_for_account(client, message, user_id, account_index):
         buttons = []
 
         for d in dialogs:
-            if d.is_group or d.is_channel:
-                is_enabled = "✅" if d.id in enabled_ids else "❌"
+            if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
+                is_enabled = "✅" if d.id in enabled_ids else ""
                 title = f"{d.name} {is_enabled}"
                 buttons.append([
                     InlineKeyboardButton(title, callback_data=f"group_{d.id}_{account_index}")
@@ -125,6 +120,7 @@ async def cb_handler(client, query: CallbackQuery):
         account_index = int(parts[2])
 
         user = await db.get_user(query.from_user.id)
+        is_premium = user.get("is_premium", False)
         session_str = user["accounts"][account_index]["session"]
 
         async with TelegramClient(StringSession(session_str), Config.API_ID, Config.API_HASH) as tg_client:
@@ -134,7 +130,42 @@ async def cb_handler(client, query: CallbackQuery):
             entity = await tg_client.get_entity(group_id)
 
             if not getattr(entity, "forum", False):
-                await toggle_group_directly(tg_client, user, group_id, session_user_id, query, account_index)
+                interval_value = None
+                if is_premium:
+                    try:
+                        await query.message.reply("Please Send Interval.\n\nTimeout in 30 seconds.")
+                        Interval = await client.listen(
+                            chat_id=query.from_user.id,
+                            filters=filters.text,
+                            timeout=30
+                        )
+                        interval_value = int(Interval.text)
+                    except ListenerTimeout:
+                        return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**.")
+                    except ValueError:
+                        return await query.message.reply_text("⚠️ Error!!\n\n**Invalid number format.**")
+
+                group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
+                group_list = group_data["groups"]
+                updated = False
+                for g in group_list:
+                    if g["id"] == group_id:
+                        if is_premium:
+                            g["interval"] = interval_value
+                        updated = True
+                        break
+
+                if not updated:
+                    new_group = {"id": group_id, "last_sent": datetime.min}
+                    if is_premium:
+                        new_group["interval"] = interval_value
+                    group_list.append(new_group)
+
+                await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
+                await query.answer("Group enabled ✅", show_alert=True)
+                await query.message.delete()
+                await show_groups_for_account(client, query.message, query.from_user.id, account_index)
+
             else:
                 try:
                     topics = await tg_client(GetForumTopicsRequest(
@@ -159,7 +190,7 @@ async def cb_handler(client, query: CallbackQuery):
                             )
                         ])
                     topic_buttons.append([
-                        InlineKeyboardButton("◀️ Go Back", callback_data=f"group_{account_index}")
+                        InlineKeyboardButton("◀️ Go Back", callback_data=f"choose_account_{account_index}")
                     ])
                     await query.message.edit_text("Select a topic:", reply_markup=InlineKeyboardMarkup(topic_buttons))
 
@@ -174,11 +205,27 @@ async def cb_handler(client, query: CallbackQuery):
         topic_id = int(parts[3])
 
         user = await db.get_user(query.from_user.id)
+        is_premium = user.get("is_premium", False)
         session_str = user["accounts"][account_index]["session"]
 
         async with TelegramClient(StringSession(session_str), Config.API_ID, Config.API_HASH) as tg_client:
             me = await tg_client.get_me()
             session_user_id = me.id
+
+            interval_value = None
+            if is_premium:
+                try:
+                    await query.message.reply("Please Send Interval.\n\nTimeout in 30 seconds.")
+                    Interval = await client.listen(
+                        chat_id=query.from_user.id,
+                        filters=filters.text,
+                        timeout=30
+                    )
+                    interval_value = int(Interval.text)
+                except ListenerTimeout:
+                    return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**.")
+                except ValueError:
+                    return await query.message.reply_text("⚠️ Error!!\n\n**Invalid number format.**")
 
             group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
             group_list = group_data["groups"]
@@ -186,17 +233,18 @@ async def cb_handler(client, query: CallbackQuery):
             updated = False
             for g in group_list:
                 if g["id"] == group_id:
-                    if g.get("topic_id") == topic_id:
-                        g.pop("topic_id", None)
-                        await query.answer("Topic removed ❌", show_alert=True)
-                    else:
-                        g["topic_id"] = topic_id
-                        await query.answer("Topic updated ✅", show_alert=True)
+                    g["topic_id"] = topic_id
+                    if is_premium:
+                        g["interval"] = interval_value
                     updated = True
+                    await query.answer("Topic updated ✅", show_alert=True)
                     break
 
             if not updated:
-                group_list.append({"id": group_id, "topic_id": topic_id, "last_sent": datetime.min})
+                new_group = {"id": group_id, "topic_id": topic_id, "last_sent": datetime.min}
+                if is_premium:
+                    new_group["interval"] = interval_value
+                group_list.append(new_group)
                 await query.answer("Group with topic added ✅", show_alert=True)
 
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
