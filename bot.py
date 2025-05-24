@@ -8,7 +8,7 @@ from config import Config
 from aiohttp import web
 from plugins.web_support import web_server
 from pytz import timezone
-from plugins.start import db
+from plugins.start import db, start_forwarding, temp
 from datetime import datetime
 import asyncio
 import os
@@ -39,8 +39,9 @@ class Bot(Client):
     async def start(self):
         await super().start()
         me = await self.get_me()
-        self.mention = me.mention
-        self.username = me.username
+        temp.ME = me.id
+        temp.U_NAME = me.username
+        temp.B_NAME = me.first_name
         self.force_channel = Config.FORCE_SUB
         if Config.FORCE_SUB:
             try:
@@ -63,7 +64,7 @@ class Bot(Client):
             except:
                 pass
 
-        for user in db.col.find({"enabled": True}, {"_id": 1}):
+        async for user in db.col.find({"enabled": True}, {"_id": 1}):
             user_id = user["_id"]
             await self.send_message(user_id, "Restarting Messaging")
             await start_forwarding(self, user_id)
