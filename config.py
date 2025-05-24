@@ -29,7 +29,7 @@ class Config(object):
         "BANNED_USERS", "1234567890").split())
 
     # wes response configuration
-    WEBHOOK = bool(os.environ.get("WEBHOOK", True))
+    WEBHOOK = bool(os.environ.get("WEBHOOK", False))
     PORT = int(os.environ.get("PORT", "8080"))
 
 
