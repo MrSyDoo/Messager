@@ -141,7 +141,7 @@ async def cb_handler(client, query: CallbackQuery):
                         )
                         interval_value = int(Interval.text)
                     except ListenerTimeout:
-                        return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**.")
+                        return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**")
                     except ValueError:
                         return await query.message.reply_text("⚠️ Error!!\n\n**Invalid number format.**")
 
