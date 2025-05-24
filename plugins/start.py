@@ -349,25 +349,6 @@ async def show_accounts(client: Client, message: Message):
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-@Client.on_message(filters.command("set_interval") & filters.private)
-async def set_interval(client, message):
-    user_id = message.from_user.id
-    user = await db.get_user(user_id)
-    if not user or not user.get("is_premium", False):
-        return await message.reply("Only premium users can set custom intervals.")
-    parts = message.text.split()
-    if len(parts) != 2:
-        return await message.reply("Usage: /setinterval <seconds>")
-    try:
-        seconds = int(parts[1])
-    except ValueError:
-        return await message.reply("Interval must be a number in seconds.")
-
-    await db.col.update_one({"_id": user_id}, {"$set": {"interval": seconds}})
-    await message.reply(f"Custom interval set to {seconds} seconds for all groups.")
-
-
-
 @Client.on_message(filters.command("remove_premium") & filters.user(Config.ADMIN))
 async def remove_premium(client, message):
     parts = message.text.split()
@@ -382,18 +363,6 @@ async def remove_premium(client, message):
     await message.reply(f"Premium removed from user `{user_id}`", parse_mode="markdown")
 
 
-@Client.on_message(filters.command("interval") & filters.private)
-async def view_interval(client, message):
-    user_id = message.from_user.id
-    user = await db.get_user(user_id)
-    if not user:
-        return await message.reply("User not found.")
-
-    if user.get("is_premium", False):
-        interval = user.get("interval", "Not set")
-        return await message.reply(f"Your custom interval is: `{interval}` seconds", parse_mode="markdown")
-    else:
-        return await message.reply("You are a free user. Default interval is 2 hours.")
 
 @Client.on_message(filters.command("delete_account") & filters.private)
 async def delete_account_handler(client, message):
