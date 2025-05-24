@@ -53,7 +53,7 @@ async def show_groups_for_account(client, message, user_id, account_index):
 
         for d in dialogs:
             if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
-                is_enabled = "✅" if d.id in enabled_ids else ""
+                is_enabled = "✅" if d.id in enabled_ids else " "
                 title = f"{d.name} {is_enabled}"
                 buttons.append([
                     InlineKeyboardButton(title, callback_data=f"group_{d.id}_{account_index}")
