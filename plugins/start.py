@@ -133,7 +133,7 @@ async def start_forwarding(client, user_id):
             for grp in groups:
                 gid = grp["id"]
                 topic_id = grp.get("topic_id")
-                interval = 10 if not is_premium else user.get("interval", 300)
+                interval = 7200 if not is_premium else user.get("interval", 300)
                 last_sent = grp.get("last_sent", datetime.min)
 
                 total_wait = interval - (datetime.now() - last_sent).total_seconds()
