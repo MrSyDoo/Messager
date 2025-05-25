@@ -13,8 +13,8 @@ from telethon.sessions import StringSession
 from telethon import TelegramClient
 from datetime import datetime
 
-FREE_ACCOUNT = 1
-FREE_GROUP = 6
+FREE_ACCOUNT = Config.FREE_ACCOUNT
+FREE_GROUP = Config.FREE_GROUP
 
 
 async def toggle_group_directly(tg_client, user, group_id, session_user_id, query, account_index):
