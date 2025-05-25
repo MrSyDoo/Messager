@@ -300,7 +300,7 @@ async def cb_handler(client, query: CallbackQuery):
         user_id = query.from_user.id
         user = await db.get_user(user_id)
 
-        if user and not user.get("is_premium", False) and len(user.get("accounts", [])) >= 1:
+        if user and not user.get("is_premium", False) and len(user.get("accounts", [])) >= FREE_ACCOUNT:
             return await query.message.reply("Free users can only add one account. Upgrade to premium for more.")
 
         try:
