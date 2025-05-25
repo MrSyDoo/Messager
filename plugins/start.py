@@ -48,6 +48,94 @@ db = Database(Config.DB_URL, Config.DB_NAME)
 
 
 
+async def start_forwarding_loop(tele_client, user_id, groups, is_premium, message):
+   if index > 0:
+        await asyncio.sleep(600 * index)  # stagger: 10min, 20min, etc.
+    meme = await tele_client.get_me()
+    usr = await message.client.get_users(user_id)
+    user_nam = f"For @{usr.username}" if usr.username else ""
+
+    while True:
+        interval = 1
+        total_slep = 60
+        if not (await db.get_user(user_id)).get("enabled", False):
+            await message.client.send_message(user_id, "Stopped!")
+            break  # stop if disabled
+
+        try:
+            if not is_premium:
+                expected_name = f"Bot is run by @{temp.U_NAME} " + user_nam
+                current_last_name = meme.last_name or ""
+                full = await tele_client(GetFullUserRequest(meme.id))
+                current_bio = full.full_user.about or ""
+                message_lines = ["WARNING: You Have Changed Account Info. [Never Repeat Again. To Remove Ad Get Premium]"]
+                update_needed = False
+                bio_edit = current_bio
+
+                if current_last_name != expected_name:
+                    message_lines.append(f"\nLast name is '{current_last_name}', updating to '{expected_name}'.")
+                    update_needed = True
+
+                if expected_name not in current_bio:
+                    message_lines.append(f"\nBio is '{current_bio}', updating to '{expected_name}'.")
+                    update_needed = True
+                    bio_edit = expected_name
+
+                if update_needed:
+                    await tele_client(UpdateProfileRequest(
+                        last_name=expected_name,
+                        about=bio_edit
+                    ))
+                    await message.client.send_message(user_id, "\n".join(message_lines))
+        except Exception as e:
+            await message.client.send_message(user_id, f"Error in Getting Message: {e}")
+            print(f"Failed to check user data: {e}")
+
+        try:
+            last_msg = (await tele_client.get_messages("me", limit=1))[0]
+        except Exception as e:
+            print(f"Failed to fetch message: {e}")
+            await message.client.send_message(user_id, f"Error in Getting Message: {e}")
+            for _ in range(total_slep // interval):
+                if not (await db.get_user(user_id)).get("enabled", False):
+                    await message.client.send_message(user_id, "Stopped!")
+                    return
+                await asyncio.sleep(interval)
+            continue
+
+        for grp in groups:
+            gid = grp["id"]
+            topic_id = grp.get("topic_id")
+            interval = grp.get("interval", 7200 if not is_premium else 300)
+            last_sent = grp.get("last_sent", datetime.min)
+            total_wait = interval - (datetime.now() - last_sent).total_seconds()
+            if total_wait > 0:
+                # Wait total_wait seconds but check every 1 second if enabled
+                for _ in range(int(total_wait)):
+                    if not (await db.get_user(user_id)).get("enabled", False):
+                        await message.client.send_message(user_id, "Stopped!")
+                        return
+                    await asyncio.sleep(1)
+            try:
+                await tele_client.send_message(
+                    gid,
+                    last_msg,
+                    reply_to=topic_id if topic_id else None
+                )
+                grp["last_sent"] = datetime.now()
+                me = await tele_client.get_me()
+                await db.group.update_one({"_id": me.id}, {"$set": {"groups": groups}})
+            except Exception as e:
+                print(f"Error sending to {gid}: {e}")
+                await message.client.send_message(user_id, f"Error sending to {gid}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
+
+        for _ in range(total_slep // interval):
+            if not (await db.get_user(user_id)).get("enabled", False):
+                await message.client.send_message(user_id, "Stopped!")
+                break
+            await asyncio.sleep(interval)
+
+
 async def start_forwarding(client, user_id):
     #Don't Use Directly
     user = await db.get_user(user_id)
@@ -242,9 +330,12 @@ async def run_forarding(client, message):
     await message.reply("Forwarding started.")
 
     for i, tele_client in enumerate(clients):
-        if i > 0:
-            await asyncio.sleep(600)  # 10 minute delay between userbots
+          # 10 minute delay between userbots
         groups = user_groups[i]
+        asyncio.create_task(
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, message, i)
+        )
+        return
         meme = await tele_client.get_me()
         while True:
             interval = 1
