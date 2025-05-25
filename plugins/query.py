@@ -13,6 +13,8 @@ from telethon.sessions import StringSession
 from telethon import TelegramClient
 from datetime import datetime
 
+FREE_ACCOUNT = 1
+FREE_GROUP = 6
 
 
 async def toggle_group_directly(tg_client, user, group_id, session_user_id, query, account_index):
@@ -26,7 +28,7 @@ async def toggle_group_directly(tg_client, user, group_id, session_user_id, quer
         message = "Group removed"
     else:
         is_premium = user.get("is_premium", False)
-        limit = 3 if not is_premium else 1000
+        limit = FREE_GROUP if not is_premium else 1000
         if len(group_list) >= limit:
             return await query.answer("Group limit reached.", show_alert=True)
         group_list.append({"id": group_id, "last_sent": datetime.min})
@@ -147,7 +149,7 @@ async def cb_handler(client, query: CallbackQuery):
 
                 group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
                 group_list = group_data["groups"]
-                limit = 6 if not is_premium else 1000
+                limit = FREE_GROUP if not is_premium else 1000
                 if len(group_list) >= limit:
                     return await query.answer("Group limit reached.", show_alert=True)
        
@@ -234,7 +236,7 @@ async def cb_handler(client, query: CallbackQuery):
 
             group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
             group_list = group_data["groups"]
-            limit = 6 if not is_premium else 1000
+            limit = FREE_GROUP if not is_premium else 1000
             if len(group_list) >= limit:
                 return await query.answer("Group limit reached.", show_alert=True)
        
