@@ -353,7 +353,7 @@ async def show_accounts(client: Client, message: Message):
 async def remove_premium(client, message):
     parts = message.text.split()
     if len(parts) != 2:
-        return await message.reply("Usage: /remove_premium <user_id>")
+        return await message.reply("Usage: /remove_premium user_id")
     try:
         user_id = int(parts[1])
     except:
