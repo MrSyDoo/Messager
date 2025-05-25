@@ -147,6 +147,11 @@ async def cb_handler(client, query: CallbackQuery):
 
                 group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
                 group_list = group_data["groups"]
+                limit = 6 if not is_premium else 1000
+                if len(group_list) >= limit:
+                    return await query.answer("Group limit reached.", show_alert=True)
+       
+
                 updated = False
                 for g in group_list:
                     if g["id"] == group_id:
@@ -229,6 +234,10 @@ async def cb_handler(client, query: CallbackQuery):
 
             group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
             group_list = group_data["groups"]
+            limit = 6 if not is_premium else 1000
+            if len(group_list) >= limit:
+                return await query.answer("Group limit reached.", show_alert=True)
+       
 
             updated = False
             for g in group_list:
