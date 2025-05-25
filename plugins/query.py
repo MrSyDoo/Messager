@@ -59,9 +59,9 @@ async def show_groups_for_account(client, message, user_id, account_index):
                     InlineKeyboardButton(title, callback_data=f"group_{d.id}_{account_index}")
                 ])
 
-        buttons.append([InlineKeyboardButton("🗑️ Delete All Groups", callback_data=f"delete_all_{account_index}")])
-        buttons.append([InlineKeyboardButton("◀️ Go Back", callback_data="back_to_accounts")])
-        await message.reply("Select groups to forward to:", reply_markup=InlineKeyboardMarkup(buttons))
+        buttons.append([InlineKeyboardButton("↻ Rᴇꜱᴇᴛ ↻", callback_data=f"delete_all_{account_index}")])
+        buttons.append([InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data="back_to_accounts")])
+        await message.reply("Sᴇʟᴇᴄᴛ ʏᴏᴜʀ ɢʀᴏᴜᴩꜱ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ:", reply_markup=InlineKeyboardMarkup(buttons))
 
 
 @Client.on_callback_query()
@@ -133,7 +133,7 @@ async def cb_handler(client, query: CallbackQuery):
                 interval_value = None
                 if is_premium:
                     try:
-                        await query.message.reply("Please Send Interval.\n\nTimeout in 30 seconds.")
+                        await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ).\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                         Interval = await client.listen(
                             chat_id=query.from_user.id,
                             filters=filters.text,
@@ -162,7 +162,7 @@ async def cb_handler(client, query: CallbackQuery):
                     group_list.append(new_group)
 
                 await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
-                await query.answer("Group enabled ✅", show_alert=True)
+                await query.answer("Gʀᴏᴜᴩ ᴇɴᴀʙʟᴇᴅ ✅", show_alert=True)
                 await query.message.delete()
                 await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
@@ -190,7 +190,7 @@ async def cb_handler(client, query: CallbackQuery):
                             )
                         ])
                     topic_buttons.append([
-                        InlineKeyboardButton("◀️ Go Back", callback_data=f"choose_account_{account_index}")
+                        InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data=f"choose_account_{account_index}")
                     ])
                     await query.message.edit_text("Select a topic:", reply_markup=InlineKeyboardMarkup(topic_buttons))
 
@@ -215,7 +215,7 @@ async def cb_handler(client, query: CallbackQuery):
             interval_value = None
             if is_premium:
                 try:
-                    await query.message.reply("Please Send Interval.\n\nTimeout in 30 seconds.")
+                    await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ).\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                     Interval = await client.listen(
                         chat_id=query.from_user.id,
                         filters=filters.text,
@@ -237,7 +237,7 @@ async def cb_handler(client, query: CallbackQuery):
                     if is_premium:
                         g["interval"] = interval_value
                     updated = True
-                    await query.answer("Topic updated ✅", show_alert=True)
+                    await query.answer("Tᴏᴩɪᴄ ᴜᴩᴅᴀᴛᴇᴅ ✅", show_alert=True)
                     break
 
             if not updated:
@@ -245,7 +245,7 @@ async def cb_handler(client, query: CallbackQuery):
                 if is_premium:
                     new_group["interval"] = interval_value
                 group_list.append(new_group)
-                await query.answer("Group with topic added ✅", show_alert=True)
+                await query.answer("Gʀᴏᴜᴩ ᴡɪᴛʜ ᴛᴏᴩɪᴄ ᴀᴅᴅᴇᴅ ✅", show_alert=True)
 
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
 
