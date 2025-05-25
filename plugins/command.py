@@ -67,11 +67,11 @@ async def handle_text_command(client: Client, message: Message):
     except Exception as e:
         await message.reply(f"Error while saving message: `{e}`")
 
-@Client.on_message(filters.command("upgrade") & filters.user(Config.ADMIN))  # Replace with your admin ID
+@Client.on_message(filters.command("add_premium") & filters.user(Config.ADMIN))  # Replace with your admin ID
 async def upgrade_user(client: Client, message: Message):
     parts = message.text.split()
     if len(parts) != 2 or not parts[1].isdigit():
-        return await message.reply("Usage: /upgrade <user_id>")
+        return await message.reply("Usage: /add_premium user_id")
     
     target_id = int(parts[1])
     await db.update_user(target_id, {"is_premium": True})
