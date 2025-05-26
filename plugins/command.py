@@ -23,15 +23,15 @@ async def handle_text_command(client: Client, message: Message):
 
     # Select account with account name (if premium and has multiple accounts)
     
-     buttons = []
-     for i, acc in enumerate(accounts):
-        try:
-            async with TelegramClient(StringSession(acc["session"]), API_ID, API_HASH) as userbot:
-                me = await userbot.get_me()
-                name = me.username or f"{me.first_name} {me.last_name or ''}".strip()
-        except Exception:
-            name = f"Account {i+1}"
-        buttons.append([InlineKeyboardButton(name, callback_data=f"text_acc_{i}")])
+    buttons = []
+    for i, acc in enumerate(accounts):
+       try:
+           async with TelegramClient(StringSession(acc["session"]), API_ID, API_HASH) as userbot:
+               me = await userbot.get_me()
+               name = me.username or f"{me.first_name} {me.last_name or ''}".strip()
+       except Exception:
+           name = f"Account {i+1}"
+       buttons.append([InlineKeyboardButton(name, callback_data=f"text_acc_{i}")])
 
     await message.reply("Select the account to use:", reply_markup=InlineKeyboardMarkup(buttons))
 
