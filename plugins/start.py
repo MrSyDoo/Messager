@@ -50,7 +50,8 @@ db = Database(Config.DB_URL, Config.DB_NAME)
 
 async def start_forwarding_loop(tele_client, user_id, groups, is_premium, message):
    if index > 0:
-        await asyncio.sleep(600 * index)  # stagger: 10min, 20min, etc.
+        await asyncio.sleep(600 * index)  # 10min, if 2, 20min
+        await message.client.send_message(user_id, f"Starting {index}")
     meme = await tele_client.get_me()
     usr = await message.client.get_users(user_id)
     user_nam = f"For @{usr.username}" if usr.username else ""
@@ -175,10 +176,12 @@ async def start_forwarding(client, user_id):
     await client.send_message(user_id, "Forwarding started.")
 
     for i, tele_client in enumerate(clients):
-        if i > 0:
-            await asyncio.sleep(600)  # 10 minute delay between userbots
-
         groups = user_groups[i]
+        asyncio.create_task(
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, message, i)
+        )
+        return
+        
         meme = await tele_client.get_me()
 
         while True:
