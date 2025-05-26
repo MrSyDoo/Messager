@@ -22,33 +22,31 @@ async def handle_text_command(client: Client, message: Message):
         return await message.reply("You have not added any account. Use /add_account first.")
 
     # Select account with account name (if premium and has multiple accounts)
-    if user.get("is_premium", False) and len(accounts) > 1:
-        buttons = []
-        for i, acc in enumerate(accounts):
-            try:
-                async with TelegramClient(StringSession(acc["session"]), API_ID, API_HASH) as userbot:
-                    me = await userbot.get_me()
-                    name = me.username or f"{me.first_name} {me.last_name or ''}".strip()
-            except Exception:
-                name = f"Account {i+1}"
-            buttons.append([InlineKeyboardButton(name, callback_data=f"text_acc_{i}")])
-
-        await message.reply("Select the account to use:", reply_markup=InlineKeyboardMarkup(buttons))
-
+    
+     buttons = []
+     for i, acc in enumerate(accounts):
         try:
-            cb: CallbackQuery = await bot.listen(user_id, timeout=60)
-        except asyncio.exceptions.TimeoutError:
-            return await message.reply("❌ Timed out. Please restart with /text")
+            async with TelegramClient(StringSession(acc["session"]), API_ID, API_HASH) as userbot:
+                me = await userbot.get_me()
+                name = me.username or f"{me.first_name} {me.last_name or ''}".strip()
+        except Exception:
+            name = f"Account {i+1}"
+        buttons.append([InlineKeyboardButton(name, callback_data=f"text_acc_{i}")])
 
-        if not cb.data.startswith("text_acc_"):
-            return await cb.answer("Invalid selection.", show_alert=True)
+    await message.reply("Select the account to use:", reply_markup=InlineKeyboardMarkup(buttons))
 
-        acc_index = int(cb.data.split("_")[-1])
-        session = accounts[acc_index]["session"]
-        await cb.message.delete()
-    else:
-        session = accounts[0]["session"]
+    try:
+        cb: CallbackQuery = await bot.listen(user_id, timeout=60)
+    except asyncio.exceptions.TimeoutError:
+        return await message.reply("❌ Timed out. Please restart with /text")
 
+    if not cb.data.startswith("text_acc_"):
+        return await cb.answer("Invalid selection.", show_alert=True)
+
+    acc_index = int(cb.data.split("_")[-1])
+    session = accounts[acc_index]["session"]
+    await cb.message.delete()
+  
     try:
         user_msg = await client.ask(
             chat_id=user_id,
