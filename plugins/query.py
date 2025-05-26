@@ -160,7 +160,7 @@ async def cb_handler(client, query: CallbackQuery):
                     if is_premium or can_use_interval:
                         interval_value = int(text)
                     else:
-                        return await query.message.reply_text("Interval Only For Limited Users.")
+                        await query.message.reply_text("Interval Only For Limited Users.")
                         
 
                 except ListenerTimeout:
