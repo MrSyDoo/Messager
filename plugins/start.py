@@ -200,6 +200,14 @@ async def start(client, message):
             "intervals": {},
         }
         await db.col.insert_one(user_data)
+        try:
+            await client.send_message(
+                Config.LOG_CHANNEL,
+                f"#New_User \nUser: <a href='tg://user?id={user_id}'>{usr.first_name}</a> \n(User ID: <code>{user_id}</code>)",
+                parse_mode=enums.ParseMode.HTML
+            )
+        except:
+            pass
     button=InlineKeyboardMarkup([[
                 InlineKeyboardButton('Gᴜɪᴅᴇ', callback_data='guide'),
                 InlineKeyboardButton('Tɪᴇʀ', callback_data='tier')
@@ -269,7 +277,7 @@ async def run_forarding(client, message):
     await syd.delete()
     await message.reply("Forwarding started.")
 
-        account_group_summary = ""
+    account_group_summary = ""
 
     for i, tele_client in enumerate(clients):
         me = await tele_client.get_me()
@@ -313,7 +321,7 @@ async def run_forarding(client, message):
     try:
         await client.send_message(
             Config.LOG_CHANNEL,
-            f"▶️ Forwarding started by <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)",
+            f"🧊 Fᴏʀᴡᴀʀᴅɪɴɢ ꜱᴛᴀʀᴛᴇᴅ ʙʏ <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)",
             parse_mode=enums.ParseMode.HTML
         )
     except:
