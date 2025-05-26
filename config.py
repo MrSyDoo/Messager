@@ -15,8 +15,8 @@ class Config(object):
     DB_NAME = os.environ.get("DB_NAME", "cluster0")
     DB_URL = os.environ.get("DB_URL", "")  # ⚠️ Required
 
-    FREE_ACCOUNT = os.environ.get("FREE_ACCOUNT", "")
-    FREE_GROUP = os.environ.get("FREE_GROUP", "")
+    FREE_ACCOUNT = os.environ.get("FREE_ACCOUNT", "2")
+    FREE_GROUP = os.environ.get("FREE_GROUP", "4")
     
     # other configs
     BOT_UPTIME = time.time()
