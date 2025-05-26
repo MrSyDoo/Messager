@@ -329,7 +329,7 @@ async def run_forarding(client, message):
 
         
 
-@Client.on_message(filters.command(["interval", "group_limit", "account_limit"]) & filters.user(Config.ADMINS))
+@Client.on_message(filters.command(["interval", "group_limit", "account_limit"]) & filters.user(Config.ADMIN))
 async def admin_command(client, message: Message):
     if len(message.command) < 3:
         return await message.reply_text(
