@@ -135,39 +135,52 @@ async def cb_handler(client, query: CallbackQuery):
             entity = await tg_client.get_entity(group_id)
 
             if not getattr(entity, "forum", False):
-                interval_value = None
-                if is_premium or can_use_interval:
-                    try:
-                        await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ).\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
-                        Interval = await client.listen(
-                            chat_id=query.from_user.id,
-                            filters=filters.text,
-                            timeout=30
-                        )
-                        interval_value = int(Interval.text)
-                    except ListenerTimeout:
-                        return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**")
-                    except ValueError:
-                        return await query.message.reply_text("⚠️ Error!!\n\n**Invalid number format.**")
-
                 group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
                 group_list = group_data["groups"]
                 limit = FREE_GROUP if not is_premium else 1000
                 if len(group_list) >= int(limit):
                     return await query.answer("Group limit reached.", show_alert=True)
-       
+
+                interval_value = None
+                try:
+                    await query.message.reply(
+                        "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ) or type /delete to remove this group.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
+                    )
+                    response = await client.listen(
+                        chat_id=query.from_user.id,
+                        filters=filters.text,
+                        timeout=30
+                    )
+                    text = response.text.strip().lower()
+
+                    if text == "/delete":
+                        group_list = [g for g in group_list if g["id"] != group_id]
+                        await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
+                        await query.message.reply_text("✅ Group deleted.")
+                        return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
+
+                    if is_premium or can_use_interval:
+                        interval_value = int(text)
+                    else:
+                        return await query.message.reply_text("Interval Only For Limited Users.")
+                        
+
+                except ListenerTimeout:
+                    return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**")
+                except ValueError:
+                    return await query.message.reply_text("⚠️ Error!!\n\n**Invalid number format.**")
 
                 updated = False
                 for g in group_list:
                     if g["id"] == group_id:
-                        if is_premium:
+                        if interval_value is not None:
                             g["interval"] = interval_value
                         updated = True
                         break
 
                 if not updated:
                     new_group = {"id": group_id, "last_sent": datetime.min}
-                    if is_premium:
+                    if interval_value is not None:
                         new_group["interval"] = interval_value
                     group_list.append(new_group)
 
@@ -207,6 +220,7 @@ async def cb_handler(client, query: CallbackQuery):
                 except Exception as e:
                     print(f"Failed to fetch topics: {e}")
                     await query.answer("Failed to fetch topics.", show_alert=True)
+
 
     elif data.startswith("topic_"):
         parts = data.split("_")
@@ -279,7 +293,7 @@ async def cb_handler(client, query: CallbackQuery):
             # Clear all groups for this session user
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": []}}, upsert=True)
             await query.answer("All group data deleted.", show_alert=True)
-
+            await query.message.delete()
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
     elif data == "help":
