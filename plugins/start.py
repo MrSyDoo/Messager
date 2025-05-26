@@ -49,7 +49,7 @@ db = Database(Config.DB_URL, Config.DB_NAME)
 
 
 async def start_forwarding_loop(tele_client, user_id, groups, is_premium, message):
-   if index > 0:
+    if index > 0:
         await asyncio.sleep(600 * index)  # 10min, if 2, 20min
         await message.client.send_message(user_id, f"Starting {index}")
     meme = await tele_client.get_me()
