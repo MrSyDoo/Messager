@@ -125,6 +125,7 @@ async def cb_handler(client, query: CallbackQuery):
 
         user = await db.get_user(query.from_user.id)
         is_premium = user.get("is_premium", False)
+        can_use_interval = user.get("can_use_interval", False)
         session_str = user["accounts"][account_index]["session"]
 
         async with TelegramClient(StringSession(session_str), Config.API_ID, Config.API_HASH) as tg_client:
@@ -135,7 +136,7 @@ async def cb_handler(client, query: CallbackQuery):
 
             if not getattr(entity, "forum", False):
                 interval_value = None
-                if is_premium:
+                if is_premium or can_use_interval:
                     try:
                         await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ).\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                         Interval = await client.listen(
@@ -215,6 +216,7 @@ async def cb_handler(client, query: CallbackQuery):
 
         user = await db.get_user(query.from_user.id)
         is_premium = user.get("is_premium", False)
+        can_use_interval = user.get("can_use_interval", False)
         session_str = user["accounts"][account_index]["session"]
 
         async with TelegramClient(StringSession(session_str), Config.API_ID, Config.API_HASH) as tg_client:
@@ -222,7 +224,7 @@ async def cb_handler(client, query: CallbackQuery):
             session_user_id = me.id
 
             interval_value = None
-            if is_premium:
+            if is_premium or can_use_interval:
                 try:
                     await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ).\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                     Interval = await client.listen(
