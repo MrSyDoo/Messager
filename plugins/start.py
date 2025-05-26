@@ -48,7 +48,7 @@ db = Database(Config.DB_URL, Config.DB_NAME)
 
 
 
-async def start_forwarding_loop(tele_client, user_id, groups, is_premium, client, index):
+async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, index):
     if index > 0:
         await asyncio.sleep(600 * index)  # 10min, if 2, 20min
         await client.send_message(user_id, f"Starting {index}")
@@ -107,7 +107,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, client
         for grp in groups:
             gid = grp["id"]
             topic_id = grp.get("topic_id")
-            interval = grp.get("interval", 7200 if not is_premium else 300)
+            interval = grp.get("interval", 7200 if (not is_premium and not can_use_interval) else 300)
             last_sent = grp.get("last_sent", datetime.min)
             total_wait = interval - (datetime.now() - last_sent).total_seconds()
             if total_wait > 0:
@@ -149,7 +149,7 @@ async def start_forwarding(client, user_id):
     syd = await client.send_message(user_id, "Starting...")
 
     is_premium = user.get("is_premium", False)
-
+    can_use_interval = user.get("can_use_interval", False)
     clients = []
     user_groups = []
 
@@ -178,7 +178,7 @@ async def start_forwarding(client, user_id):
     for i, tele_client in enumerate(clients):
         groups = user_groups[i]
         asyncio.create_task(
-            start_forwarding_loop(tele_client, user_id, groups, is_premium, client, i)
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
         )
         
 
@@ -242,6 +242,7 @@ async def run_forarding(client, message):
     syd = await message.reply("Starting...")
 
     is_premium = user.get("is_premium", False)
+    can_use_interval = user.get("can_use_interval", False)
     
     clients = []
     user_groups = []
@@ -272,7 +273,7 @@ async def run_forarding(client, message):
           # 10 minute delay between userbots
         groups = user_groups[i]
         asyncio.create_task(
-            start_forwarding_loop(tele_client, user_id, groups, is_premium, client, i)
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
         )
         
 
