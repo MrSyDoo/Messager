@@ -310,11 +310,14 @@ async def run_forarding(client, message):
             f"<b>Accounts and Groups Saved:</b>\n{account_group_summary}",
             parse_mode=enums.ParseMode.HTML
         )
-    await client.send_message(
-        Config.LOG_CHANNEL,
-        f"▶️ Forwarding started by <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)",
-        parse_mode=enums.ParseMode.HTML
+    try:
+        await client.send_message(
+            Config.LOG_CHANNEL,
+            f"▶️ Forwarding started by <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)",
+            parse_mode=enums.ParseMode.HTML
         )
+    except:
+        pass
 
         
 
