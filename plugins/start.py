@@ -269,12 +269,53 @@ async def run_forarding(client, message):
     await syd.delete()
     await message.reply("Forwarding started.")
 
+        account_group_summary = ""
+
     for i, tele_client in enumerate(clients):
-          # 10 minute delay between userbots
-        groups = user_groups[i]
-        asyncio.create_task(
-            start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
+        me = await tele_client.get_me()
+        account_name = me.first_name or me.username or "Unknown"
+        group_lines = []
+
+        group_list = user_groups[i]  # List of group dicts with {"id", maybe "topic_id"}
+        for group in group_list:
+            try:
+                entity = await tele_client.get_entity(group["id"])
+                group_title = entity.title if hasattr(entity, "title") else str(group["id"])
+
+                # Check for topic_id and get the topic title if present
+                if "topic_id" in group:
+                    topics = await tele_client(GetForumTopicsRequest(
+                        channel=entity,
+                        offset_date=0,
+                        offset_id=0,
+                        offset_topic=0,
+                        limit=100
+                    ))
+
+                    topic = next((t for t in topics.topics if t.id == group["topic_id"]), None)
+                    if topic:
+                        group_title += f" ({topic.title})"
+                    else:
+                        group_title += f" (Topic ID: {group['topic_id']})"
+
+                group_lines.append(f"  - {group_title}")
+            except Exception as e:
+                group_lines.append(f"  - Failed to fetch group {group.get('id')}")
+
+        account_group_summary += f"\n<b>{account_name}</b>:\n" + "\n".join(group_lines) + "\n"
+
+    if account_group_summary.strip():
+        await client.send_message(
+            user_id,
+            f"<b>Accounts and Groups Saved:</b>\n{account_group_summary}",
+            parse_mode=enums.ParseMode.HTML
         )
+    await client.send_message(
+        Config.LOG_CHANNEL,
+        f"▶️ Forwarding started by <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)",
+        parse_mode=enums.ParseMode.HTML
+        )
+
         
 
 @Client.on_message(filters.command(["interval", "group_limit", "account_limit"]) & filters.user(Config.ADMINS))
