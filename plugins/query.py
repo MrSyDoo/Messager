@@ -61,8 +61,10 @@ async def show_groups_for_account(client, message, user_id, account_index):
                     InlineKeyboardButton(title, callback_data=f"group_{d.id}_{account_index}")
                 ])
 
-        buttons.append([InlineKeyboardButton("↻ Rᴇꜱᴇᴛ ↻", callback_data=f"delete_all_{account_index}")])
-        buttons.append([InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data="back_to_accounts")])
+        buttons.append([
+            InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data="back_to_accounts"),
+            InlineKeyboardButton("↻ Rᴇꜱᴇᴛ ↻", callback_data=f"delete_all_{account_index}")
+        ])
         await message.reply("Sᴇʟᴇᴄᴛ ʏᴏᴜʀ ɢʀᴏᴜᴩꜱ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ:", reply_markup=InlineKeyboardMarkup(buttons))
 
 
