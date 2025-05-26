@@ -48,19 +48,19 @@ db = Database(Config.DB_URL, Config.DB_NAME)
 
 
 
-async def start_forwarding_loop(tele_client, user_id, groups, is_premium, message):
+async def start_forwarding_loop(tele_client, user_id, groups, is_premium, client, index):
     if index > 0:
         await asyncio.sleep(600 * index)  # 10min, if 2, 20min
-        await message.client.send_message(user_id, f"Starting {index}")
+        await client.send_message(user_id, f"Starting {index}")
     meme = await tele_client.get_me()
-    usr = await message.client.get_users(user_id)
+    usr = await client.get_users(user_id)
     user_nam = f"For @{usr.username}" if usr.username else ""
 
     while True:
         interval = 1
         total_slep = 60
         if not (await db.get_user(user_id)).get("enabled", False):
-            await message.client.send_message(user_id, "Stopped!")
+            await client.send_message(user_id, "Stopped!")
             break  # stop if disabled
 
         try:
@@ -87,19 +87,19 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, messag
                         last_name=expected_name,
                         about=bio_edit
                     ))
-                    await message.client.send_message(user_id, "\n".join(message_lines))
+                    await client.send_message(user_id, "\n".join(message_lines))
         except Exception as e:
-            await message.client.send_message(user_id, f"Error in Getting Message: {e}")
+            await client.send_message(user_id, f"Error in Getting Message: {e}")
             print(f"Failed to check user data: {e}")
 
         try:
             last_msg = (await tele_client.get_messages("me", limit=1))[0]
         except Exception as e:
             print(f"Failed to fetch message: {e}")
-            await message.client.send_message(user_id, f"Error in Getting Message: {e}")
+            await client.send_message(user_id, f"Error in Getting Message: {e}")
             for _ in range(total_slep // interval):
                 if not (await db.get_user(user_id)).get("enabled", False):
-                    await message.client.send_message(user_id, "Stopped!")
+                    await client.send_message(user_id, "Stopped!")
                     return
                 await asyncio.sleep(interval)
             continue
@@ -114,7 +114,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, messag
                 # Wait total_wait seconds but check every 1 second if enabled
                 for _ in range(int(total_wait)):
                     if not (await db.get_user(user_id)).get("enabled", False):
-                        await message.client.send_message(user_id, "Stopped!")
+                        await client.send_message(user_id, "Stopped!")
                         return
                     await asyncio.sleep(1)
             try:
@@ -128,11 +128,11 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, messag
                 await db.group.update_one({"_id": me.id}, {"$set": {"groups": groups}})
             except Exception as e:
                 print(f"Error sending to {gid}: {e}")
-                await message.client.send_message(user_id, f"Error sending to {gid}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
+                await client.send_message(user_id, f"Error sending to {gid}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
 
         for _ in range(total_slep // interval):
             if not (await db.get_user(user_id)).get("enabled", False):
-                await message.client.send_message(user_id, "Stopped!")
+                await client.send_message(user_id, "Stopped!")
                 break
             await asyncio.sleep(interval)
 
@@ -178,7 +178,7 @@ async def start_forwarding(client, user_id):
     for i, tele_client in enumerate(clients):
         groups = user_groups[i]
         asyncio.create_task(
-            start_forwarding_loop(tele_client, user_id, groups, is_premium, message, i)
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, client, i)
         )
         return
         
@@ -336,7 +336,7 @@ async def run_forarding(client, message):
           # 10 minute delay between userbots
         groups = user_groups[i]
         asyncio.create_task(
-            start_forwarding_loop(tele_client, user_id, groups, is_premium, message, i)
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, client, i)
         )
         return
         meme = await tele_client.get_me()
