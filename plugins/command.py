@@ -86,7 +86,7 @@ async def add_account_handler(client: Client, message: Message):
     user_id = message.from_user.id
     user = await db.get_user(user_id)
 
-    if user and not user.get("is_premium", False) and len(user.get("accounts", [])) >= FREE_ACCOUNT:
+    if user and not user.get("is_premium", False) and len(user.get("accounts", [])) >= user.get("account_limit", int(FREE_ACCOUNT)):
         return await message.reply("Free users can only add one account. Upgrade to premium for more.")
 
     
