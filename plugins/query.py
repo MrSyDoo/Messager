@@ -143,9 +143,7 @@ async def cb_handler(client, query: CallbackQuery):
 
                 interval_value = None
                 try:
-                    await query.message.reply(
-                        "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ) or type /delete to remove this group.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
-                    )
+                    await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                     response = await client.listen(
                         chat_id=query.from_user.id,
                         filters=filters.text,
@@ -245,9 +243,7 @@ async def cb_handler(client, query: CallbackQuery):
 
             interval_value = None
             try:
-                await query.message.reply(
-                    "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ) or type /delete to remove this group.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
-                )
+                await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                 response = await client.listen(
                     chat_id=query.from_user.id,
                     filters=filters.text,
