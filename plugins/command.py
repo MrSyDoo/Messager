@@ -36,7 +36,7 @@ async def handle_text_command(client: Client, message: Message):
     await message.reply("Select the account to use:", reply_markup=InlineKeyboardMarkup(buttons))
 
     try:
-        cb: CallbackQuery = await bot.listen(user_id, timeout=60)
+        cb: CallbackQuery = await client.listen(user_id, timeout=60)
     except asyncio.exceptions.TimeoutError:
         return await message.reply("❌ Timed out. Please restart with /text")
 
