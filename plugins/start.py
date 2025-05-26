@@ -275,7 +275,48 @@ async def run_forarding(client, message):
             start_forwarding_loop(tele_client, user_id, groups, is_premium, client, i)
         )
         
- 
+
+@Client.on_message(filters.command(["interval", "group_limit", "account_limit"]) & filters.user(Config.ADMINS))
+async def admin_command(client, message: Message):
+    if len(message.command) < 3:
+        return await message.reply_text(
+            "Usage:\n"
+            "/interval y/n user_id\n"
+            "/group_limit <number> user_id\n"
+            "/account_limit <number> user_id"
+        )
+
+    command = message.command[0].lower()
+    value = message.command[1]
+    try:
+        user_id = int(message.command[2])
+    except ValueError:
+        return await message.reply_text("Invalid user_id. Please provide a valid number.")
+
+    user = await db.col.find_one({"_id": user_id})
+    if not user:
+        return await message.reply_text("User not found in database.")
+
+    update = {}
+
+    if command == "interval":
+        if value.lower() not in ["y", "n"]:
+            return await message.reply_text("Value must be 'y' or 'n'.")
+        update["can_use_interval"] = value.lower() == "y"
+
+    elif command == "group_limit":
+        if not value.isdigit():
+            return await message.reply_text("Group limit must be a digit.")
+        update["group_limit"] = int(value)
+
+    elif command == "account_limit":
+        if not value.isdigit():
+            return await message.reply_text("Account limit must be a digit.")
+        update["account_limit"] = int(value)
+
+    await db.col.update_one({"_id": user_id}, {"$set": update})
+    await message.reply_text(f"Updated `{command}` settings for user `{user_id}`.")
+
 
 
 
@@ -341,3 +382,6 @@ async def delete_account_handler(client, message):
         "Select the account you want to delete:",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
+
+
+
