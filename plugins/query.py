@@ -258,8 +258,11 @@ async def cb_handler(client, query: CallbackQuery):
                     await query.message.reply_text("✅ Group deleted.")
                     await query.message.delete()
                     return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
-
-                if is_premium or can_use_interval:
+                if text == "add":
+                    inter = False
+                    
+                    
+                if (is_premium or can_use_interval) and inter:
                     interval_value = int(text)
                 else:
                     await query.message.reply_text("Interval Only For Limited Users.")
