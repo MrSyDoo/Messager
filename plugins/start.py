@@ -53,7 +53,6 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
     if index > 0:
         await asyncio.sleep(600 * index)  # 10min, if 2, 20min
         await client.send_message(user_id, f"Starting {index}")
-    meme = await tele_client.get_me()
     usr = await client.get_users(user_id)
     user_nam = f"For @{usr.username}" if usr.username else ""
 
@@ -66,6 +65,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
 
         try:
             if not is_premium:
+                meme = await tele_client.get_me()
                 expected_name = f"Bot is run by @{temp.U_NAME} " + user_nam
                 current_last_name = meme.last_name or ""
                 full = await tele_client(GetFullUserRequest(meme.id))
