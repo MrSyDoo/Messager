@@ -144,7 +144,7 @@ async def cb_handler(client, query: CallbackQuery):
                 interval_value = None
                 add_command = False
                 try:
-                    syd = await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] Oʀ Sᴇɴᴅ /add Tᴏ Aᴅᴅ Gʀᴏᴜᴩ Oɴʟʏ ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
+                    prompt = await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] Oʀ Sᴇɴᴅ /add Tᴏ Aᴅᴅ Gʀᴏᴜᴩ Oɴʟʏ ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
                     response = await client.listen(
                         chat_id=query.from_user.id,
                         filters=filters.text,
@@ -157,7 +157,7 @@ async def cb_handler(client, query: CallbackQuery):
                         await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                         await query.message.reply_text("✅ Group deleted.")
                         await query.message.delete()
-                        await syd.delete()
+                        await prompt.delete()
                         return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
                     if text == "/add":
@@ -168,14 +168,14 @@ async def cb_handler(client, query: CallbackQuery):
                             if is_premium or can_use_interval:
                                 interval_value = interval
                             else:
-                                await syd.delete()
+                                await prompt.delete()
                                 return await query.message.reply_text("Interval only available to limited users.")
                         except ValueError:
-                            await syd.delete()
+                            await prompt.delete()
                             return await query.message.reply_text("⚠️ Invalid format. Interval should be a number or /add.")
 
                 except ListenerTimeout:
-                    await syd.delete()
+                    await prompt.delete()
                     return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**")
 
                 updated = False
@@ -199,7 +199,7 @@ async def cb_handler(client, query: CallbackQuery):
                 await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
                 await query.answer("Gʀᴏᴜᴩ ᴇɴᴀʙʟᴇᴅ/ᴜᴩᴅᴀᴛᴇᴅ ✅", show_alert=True)
                 await query.message.delete()
-                await syd.delete()
+                await prompt.delete()
                 await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
             else:
@@ -251,8 +251,7 @@ async def cb_handler(client, query: CallbackQuery):
             session_user_id = me.id
 
             group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
-          interval
-        list = group_data["groups"]
+            group_list = group_data["groups"]
             limit = user.get("group_limit", FREE_GROUP) if not is_premium else 1000
             if len(group_list) >= int(limit):
                 return await query.answer("Group limit reached.", show_alert=True)
@@ -260,8 +259,8 @@ async def cb_handler(client, query: CallbackQuery):
             interval_value = None
             add_command = False
             try:
-                mese = await query.message.reply(
-                    "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /add Tᴏ Sᴋɪᴩ[Oɴʟʏ Aᴅᴅ Tʜᴇ Gʀᴏᴜᴩ Oɴʟʏ] ᴏʀ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
+                prompt = await query.message.reply(
+                    "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /add Tᴏ Sᴋɪᴩ (ᴏɴʟʏ ᴀᴅᴅ ᴛʜᴇ ɢʀᴏᴜᴩ) ᴏʀ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
                 )
                 response = await client.listen(
                     chat_id=query.from_user.id,
@@ -270,12 +269,13 @@ async def cb_handler(client, query: CallbackQuery):
                 )
                 text = response.text.strip().lower()
 
+                await prompt.delete()
+
                 if text == "/delete":
                     group_list = [g for g in group_list if g["id"] != group_id]
                     await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                     await query.message.reply_text("✅ Group deleted.")
                     await query.message.delete()
-                    await mese.delete()
                     return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
                 if text == "/add":
@@ -286,13 +286,9 @@ async def cb_handler(client, query: CallbackQuery):
                         if is_premium or can_use_interval:
                             interval_value = interval
                         else:
-                            await mese.delete()
                             return await query.message.reply_text("Interval only available to limited users.")
-                        
                     except ValueError:
-                        await mese.delete()
-                        await query.message.reply_text("⚠️ Invalid format. Interval should be a number or /add.")
-                        return
+                        return await query.message.reply_text("⚠️ Invalid format. Interval should be a number or /add.")
 
             except ListenerTimeout:
                 return await query.message.reply_text("⚠️ Error!!\n\n**Request timed out.**")
@@ -304,7 +300,7 @@ async def cb_handler(client, query: CallbackQuery):
                     if interval_value is not None:
                         g["interval"] = interval_value
                     elif add_command and not (is_premium or can_use_interval):
-                        g.pop("interval", None)  # remove interval for non-premium if using add
+                        g.pop("interval", None)
                     updated = True
                     await query.answer("Tᴏᴩɪᴄ ᴜᴩᴅᴀᴛᴇᴅ ✅", show_alert=True)
                     break
@@ -317,8 +313,6 @@ async def cb_handler(client, query: CallbackQuery):
                 }
                 if interval_value is not None:
                     new_group["interval"] = interval_value
-                elif not (is_premium or can_use_interval) and add_command:
-                    pass  # explicitly skip interval
                 group_list.append(new_group)
                 await query.answer("Gʀᴏᴜᴩ ᴡɪᴛʜ ᴛᴏᴩɪᴄ ᴀᴅᴅᴇᴅ ✅", show_alert=True)
 
