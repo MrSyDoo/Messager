@@ -264,14 +264,14 @@ async def cb_handler(client, query: CallbackQuery):
                 )
                 text = response.text.strip().lower()
 
-                if text == "delete":
+                if text == "/delete":
                     group_list = [g for g in group_list if g["id"] != group_id]
                     await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                     await query.message.reply_text("✅ Group deleted.")
                     await query.message.delete()
                     return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
-                if text == "add":
+                if text == "/add":
                     add_command = True
                 else:
                     try:
