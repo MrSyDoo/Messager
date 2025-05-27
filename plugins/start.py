@@ -271,6 +271,7 @@ async def run_forarding(client, message):
         user_groups.append(groups)
 
     if not any(user_groups):
+        await syd.delete()
         return await message.reply("No groups selected. Use /groups to add some.")
 
     sessions[user_id] = clients
