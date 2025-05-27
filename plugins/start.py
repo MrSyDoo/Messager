@@ -196,6 +196,7 @@ async def start(client, message):
         user_data = {
             "_id": used.id,
             "is_premium": False,
+            "name": used.first_name,
             "accounts": [],
             "enabled": False,
             "intervals": {},
@@ -204,7 +205,7 @@ async def start(client, message):
         try:
             await client.send_message(
                 Config.LOG_CHANNEL,
-                f"#New_User \nUser: <a href='tg://user?id={user_id}'>{usr.first_name}</a> \n(User ID: <code>{user_id}</code>)",
+                f"#New_User \nUser: <a href='tg://user?id={user_id}'>{used.first_name}</a> \n(User ID: <code>{user_id}</code>)",
                 parse_mode=enums.ParseMode.HTML
             )
         except:
