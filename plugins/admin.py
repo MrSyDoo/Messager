@@ -8,7 +8,69 @@ import sys
 import time
 import asyncio
 import datetime
+from telethon.sync import TelegramClient
+from telethon.sessions import StringSession
+from telethon.errors import SessionPasswordNeededError
+from telethon.errors.rpcerrorlist import FloodWaitError
 
+@Client.on_message(filters.command('users') & filters.user(Config.ADMIN))
+async def list_users(bot, message):
+    syd = await message.reply('Getting list of users...')
+    users = await db.get_all_users()
+
+    out = "Users Saved In DB Are:\n\n"
+    user_count = 0
+
+    async for user in users:
+        user_count += 1
+        user_id = user["_id"]
+        name = user.get("name", "Unknown")
+        enabled = user.get("enabled", False)
+        accounts = user.get("accounts", [])
+        group_limit = user.get("group_limit", "Default")
+        account_limit = user.get("account_limit", "Default")
+        can_use_interval = user.get("can_use_interval", False)
+
+        out += f"<a href='tg://user?id={user_id}'>{name}</a>\n"
+        out += f"  └ Enabled: {enabled}\n"
+        out += f"  └ Accounts: {len(accounts)} (Limit: {account_limit})\n"
+        out += f"  └ Group Limit: {group_limit}, Can Use Interval: {can_use_interval}\n"
+
+        for index, account in enumerate(accounts):
+            try:
+                session = account["session"]
+                async with TelegramClient(StringSession(session), Config.API_ID, Config.API_HASH) as userbot:
+                    me = await userbot.get_me()
+                    out += f"    └ Account {index+1}: {me.first_name} [<code>{me.id}</code>]\n"
+
+                    group_data = await db.group.find_one({"_id": me.id})
+                    groups = group_data.get("groups", []) if group_data else []
+                    for g in groups:
+                        group_id = g["id"]
+                        topic_id = g.get("topic_id")
+                        interval = g.get("interval")
+                        out += f"        └ Group ID: <code>{group_id}</code>"
+                        if topic_id:
+                            out += f", Topic: {topic_id}"
+                        if interval:
+                            out += f", Interval: {interval}s"
+                        out += "\n"
+            except Exception as e:
+                out += f"    └ Account {index+1}: [Error: {e}]\n"
+
+        out += "\n"
+
+        # Update progress every 10 users
+        if user_count % 10 == 0:
+            try:
+                await syd.edit_text(f"Processed {user_count} users...")
+            except:
+                pass
+
+    with open('users.txt', 'w+', encoding="utf-8") as f:
+        f.write(out)
+    await message.reply_document("users.txt", caption="List Of Users & Accounts")
+    await syd.delete()
 
 @Client.on_message(filters.command(["stats", "status"]) & filters.user(Config.ADMIN))
 async def get_stats(bot, message):
