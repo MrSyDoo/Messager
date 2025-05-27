@@ -77,7 +77,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                     message_lines.append(f"\nLast name is '{current_last_name}', updating to '{expected_name}'.")
                     update_needed = True
 
-                if expected_name not in current_bio:
+                if current_bio != expected_name:
                     message_lines.append(f"\nBio is '{current_bio}', updating to '{expected_name}'.")
                     update_needed = True
                     bio_edit = expected_name
