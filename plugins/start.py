@@ -4,6 +4,7 @@ import random, asyncio
 from datetime import datetime, timedelta
 from telethon.tl.functions.account import UpdateProfileRequest
 from pyrogram import Client, filters, enums
+from telethon.tl.functions.channels import GetForumTopicsRequest
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message
 from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
