@@ -326,7 +326,7 @@ async def run_forarding(client, message):
     try:
         await client.send_message(
             Config.LOG_CHANNEL,
-            f"🧊 Fᴏʀᴡᴀʀᴅɪɴɢ ꜱᴛᴀʀᴛᴇᴅ ʙʏ <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)",
+            f"#Process \n🧊 Fᴏʀᴡᴀʀᴅɪɴɢ ꜱᴛᴀʀᴛᴇᴅ ʙʏ <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)\n\n{account_group_summary}",
             parse_mode=enums.ParseMode.HTML
         )
     except:
