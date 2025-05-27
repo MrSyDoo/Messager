@@ -281,6 +281,10 @@ async def run_forarding(client, message):
     account_group_summary = ""
 
     for i, tele_client in enumerate(clients):
+        groups = user_groups[i]
+        asyncio.create_task(
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
+        )
         me = await tele_client.get_me()
         account_name = me.first_name or me.username or "Unknown"
         group_lines = []
@@ -408,7 +412,7 @@ async def remove_premium(client, message):
         return await message.reply("Invalid user ID.")
 
     await db.col.update_one({"_id": user_id}, {"$set": {"is_premium": False}})
-    await message.reply(f"Premium removed from user `{user_id}`", parse_mode="markdown")
+    await message.reply(f"Premium removed from user `{user_id}`", parse_mode=enums.ParseMode.HTML)
 
 
 
