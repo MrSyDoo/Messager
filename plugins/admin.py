@@ -49,11 +49,14 @@ async def list_users(bot, message):
                         group_id = g["id"]
                         topic_id = g.get("topic_id")
                         interval = g.get("interval")
+                        last = g.get("last_sent")
                         out += f"        └ Group ID: <code>{group_id}</code>"
                         if topic_id:
                             out += f", Topic: {topic_id}"
                         if interval:
                             out += f", Interval: {interval}s"
+                        if last:
+                            out += f", Last Sent: {last}"
                         out += "\n"
             except Exception as e:
                 out += f"    └ Account {index+1}: [Error: {e}]\n"
