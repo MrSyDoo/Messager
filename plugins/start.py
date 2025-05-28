@@ -1,6 +1,8 @@
 import motor.motor_asyncio
 from config import Config, Txt
 import random, asyncio
+from collections import defaultdict
+import pytz
 from datetime import datetime, timedelta
 from telethon.tl.functions.account import UpdateProfileRequest
 from pyrogram import Client, filters, enums
@@ -9,7 +11,7 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from telethon.sync import TelegramClient
 from telethon.sessions import StringSession
 from telethon.tl.functions.users import GetFullUserRequest
-
+india = pytz.timezone("Asia/Kolkata")
 
 sessions = {}
 API_HASH = Config.API_HASH
@@ -25,7 +27,8 @@ class Database:
         self._client = motor.motor_asyncio.AsyncIOMotorClient(uri)
         self.db = self._client[database_name]
         self.col = self.db.used
-        self.group = self.db.grp # <- new group collection for session-user group storage
+        self.group = self.db.grp
+        self.user_messages = self.db.messag
 
     async def get_user(self, user_id):
         return await self.col.find_one({"_id": user_id})
@@ -108,7 +111,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
         for grp in groups:
             gid = grp["id"]
             topic_id = grp.get("topic_id")
-            interval = grp.get("interval", 7200 if (not is_premium and not can_use_interval) else 300)
+            interval = grp.get("interval", 300 if (is_premium or can_use_interval) else 7200)
             last_sent = grp.get("last_sent", datetime.min)
             total_wait = interval - (datetime.now() - last_sent).total_seconds()
             if total_wait > 0:
@@ -127,6 +130,11 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 grp["last_sent"] = datetime.now()
                 me = await tele_client.get_me()
                 await db.group.update_one({"_id": me.id}, {"$set": {"groups": groups}})
+                await db.user_messages.insert_one({
+                    "user_id": user_id,
+                    "group_id": gid,
+                    "time": datetime.now(tz=india)
+                    })
             except Exception as e:
                 print(f"Error sending to {gid}: {e}")
                 await client.send_message(user_id, f"Error sending to {gid}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
@@ -138,6 +146,41 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
             await asyncio.sleep(interval)
 
     await client.send_message(user_id, "Stopped..!")
+    syd = await message.reply("Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
+
+    entries = await db.user_messages.find({"user_id": user_id}).to_list(None)
+    if not entries:
+        return await syd.edit("No forwarding data found for this user.")
+
+    grouped = defaultdict(list)
+    for entry in entries:
+        group_id = entry.get("group_id")
+        timestamp = entry.get("time")
+        if isinstance(timestamp, datetime):
+            timestamp = timestamp.astimezone(india)
+            timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S IST")
+        else:
+            timestamp_str = str(timestamp)
+        grouped[group_id].append(timestamp_str)
+
+    # Sort times
+    for group_id in grouped:
+        grouped[group_id].sort()
+
+    # Build output
+    out = f"User ID: {user_id}\n"
+    for group_id, times in grouped.items():
+        out += f"  • Group ID: {group_id}\n"
+        for t in times:
+            out += f"    - {t}\n"
+
+    with open("forward.txt", "w", encoding="utf-8") as f:
+        f.write(out)
+
+    await message.reply_document("forward.txt", caption=f"Forward log for user `{user_id}`")
+    await db.user_messages.delete_many({"user_id": user_id})
+    await syd.delete()
+
 
 
 async def start_forwarding(client, user_id):
