@@ -358,7 +358,7 @@ async def run_forarding(client, message):
     if account_group_summary.strip():
         await client.send_message(
             user_id,
-            f"<b>Accounts and Groups Saved:</b>\n{account_group_summary}",
+            f"<b>Accounts and Groups For Forwarding:</b>\n{account_group_summary}\n\nSend /stop to stop the process",
             parse_mode=enums.ParseMode.HTML
         )
     try:
