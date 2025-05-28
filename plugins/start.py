@@ -61,10 +61,9 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
 
     while True:
         interval = 1
-        total_slep = 60
+        total_slep = 20
         if not (await db.get_user(user_id)).get("enabled", False):
-            await client.send_message(user_id, "Stopped!")
-            break  # stop if disabled
+            break
 
         try:
             if not is_premium:
@@ -117,7 +116,6 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 # Wait total_wait seconds but check every 1 second if enabled
                 for _ in range(int(total_wait)):
                     if not (await db.get_user(user_id)).get("enabled", False):
-                        #await client.send_message(user_id, "Stopped!")
                         break
                     await asyncio.sleep(1)
             try:
@@ -140,11 +138,10 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
 
         for _ in range(total_slep // interval):
             if not (await db.get_user(user_id)).get("enabled", False):
-              #  await client.send_message(user_id, "Stopped!")
                 break
             await asyncio.sleep(interval)
 
-    await client.send_message(user_id, "Stopped..!")
+    await client.send_message(user_id, "Sᴛᴏᴩᴩᴇᴅ..!")
     syd = await client.send_message(user_id, "Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
 
     entries = await db.user_messages.find({"user_id": user_id}).to_list(None)
@@ -161,22 +158,17 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
         else:
             timestamp_str = str(timestamp)
         grouped[group_id].append(timestamp_str)
-
-    # Sort times
     for group_id in grouped:
         grouped[group_id].sort()
-
-    # Build output
     out = f"User ID: {user_id}\n"
     for group_id, times in grouped.items():
-        out += f"  • Group ID: {group_id}\n"
+        out += f"  => Group ID: {group_id}\n"
         for t in times:
             out += f"    - {t}\n"
-
     with open("forward.txt", "w", encoding="utf-8") as f:
         f.write(out)
 
-    await client.send_document(user_id, "forward.txt", caption=f"Forward log for user `{user_id}`")
+    await client.send_document(user_id, "forward.txt", caption=f"Fᴏʀᴡᴀʀᴅ ʟᴏɢꜱ")
     await db.user_messages.delete_many({"user_id": user_id})
     await syd.delete()
 
