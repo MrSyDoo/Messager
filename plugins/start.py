@@ -145,7 +145,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
             await asyncio.sleep(interval)
 
     await client.send_message(user_id, "Stopped..!")
-    syd = await message.reply("Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
+    syd = await client.send_message(user_id, "Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
 
     entries = await db.user_messages.find({"user_id": user_id}).to_list(None)
     if not entries:
@@ -176,7 +176,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
     with open("forward.txt", "w", encoding="utf-8") as f:
         f.write(out)
 
-    await message.reply_document("forward.txt", caption=f"Forward log for user `{user_id}`")
+    await client.send_document(user_id, "forward.txt", caption=f"Forward log for user `{user_id}`")
     await db.user_messages.delete_many({"user_id": user_id})
     await syd.delete()
 
