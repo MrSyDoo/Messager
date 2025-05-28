@@ -115,8 +115,8 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 # Wait total_wait seconds but check every 1 second if enabled
                 for _ in range(int(total_wait)):
                     if not (await db.get_user(user_id)).get("enabled", False):
-                        await client.send_message(user_id, "Stopped!")
-                        return
+                        #await client.send_message(user_id, "Stopped!")
+                        break
                     await asyncio.sleep(1)
             try:
                 await tele_client.send_message(
@@ -133,9 +133,11 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
 
         for _ in range(total_slep // interval):
             if not (await db.get_user(user_id)).get("enabled", False):
-                await client.send_message(user_id, "Stopped!")
+              #  await client.send_message(user_id, "Stopped!")
                 break
             await asyncio.sleep(interval)
+
+    await client.send_message(user_id, "Stopped..!")
 
 
 async def start_forwarding(client, user_id):
