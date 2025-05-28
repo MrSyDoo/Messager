@@ -103,8 +103,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
             await client.send_message(user_id, f"Error in Getting Message: {e}")
             for _ in range(total_slep // interval):
                 if not (await db.get_user(user_id)).get("enabled", False):
-                    await client.send_message(user_id, "Stopped!")
-                    return
+                    break
                 await asyncio.sleep(interval)
             continue
 
