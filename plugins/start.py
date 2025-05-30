@@ -312,42 +312,36 @@ async def run_forwarding(client: Client, message: Message):
         "Hᴏᴡ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇɴᴅ ᴛʜᴇ ᴍᴇꜱꜱᴀɢᴇ?\nCʟɪᴄᴋ ᴏɴ ꜱᴀᴠᴇᴅ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ꜱᴇɴᴅ ʟᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇ ꜱᴀᴠᴇᴅ ʙʏ ᴛʜᴇ ᴜꜱᴇʀ ʙᴏᴛ\nCʟɪᴄᴋ ᴏɴ ᴡɪᴛʜ ᴛᴀɢ ɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇɴᴅ ᴍᴇꜱꜱᴀɢᴇ ᴡɪᴛʜ ᴛʜᴇ ꜰᴏʀᴡᴀʀᴅ ᴛᴀɢ [ʏᴏᴜ ʜᴀᴠᴇ ᴛᴏ ɢɪᴠᴇ ᴛʜᴇ ɪɴᴩᴜᴛ ꜰᴏʀ ᴛʜᴀᴛ] \nCʜᴏᴏꜱᴇ ᴀɴ ᴏᴩᴛɪᴏɴ ʙᴇʟᴏᴡ (timeout 60s):",
         reply_markup=keyboard
     )
+        
     try:
-        event = await client.listen(user_id, timeout=60)
+        cb: CallbackQuery = await client.listen(message.from_user.id, timeout=60)
     except asyncio.exceptions.TimeoutError:
         await choose.delete()
-        await message.reply("Tɪᴍᴇ ᴏᴜᴛ, Cʟɪᴄᴋ ᴏɴ /run ᴛᴏ ꜱᴛᴀʀᴛ ᴀɢᴀɪɴ")
+        return await message.reply("Tɪᴍᴇ ᴏᴜᴛ, Cʟɪᴄᴋ ᴏɴ /run ᴛᴏ ꜱᴛᴀʀᴛ ᴀɢᴀɪɴ")
+
+    if not cb.data.startswith(("normal", "forward_tag")):
+        await cb.answer("Invalid selection.", show_alert=True)
         return
 
-    if isinstance(event, CallbackQuery):
-        cb = event
-        await cb.answer()
-        await choose.delete()
+    await cb.answer()
+    await choose.delete()
 
-        if cb.data == "normal":
-            pass  # Just pass, no changes or returns here
+    if cb.data == "normal":
+        # Just continue normal processing (no special action)
+        pass
 
-        elif cb.data.startswith("forward"):
-            try:
-                user_msg = await client.ask(
-                    chat_id=user_id,
-                    text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
-                    timeout=300
-                )
-                msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
-                await db.update_user(user_id, {"forward_message_id": msg.message_id})
-                await user_msg.delete()
-            except asyncio.exceptions.TimeoutError:
-                return await message.reply("❌ Timed out. Please start again using /run.")
-
-        else:
-            return await message.reply("❌ Unknown option. Please restart with /run.")
-
-    else:
-        await choose.delete()
-        return await message.reply("❌ Invalid response. Start again with /run.")
-
-    # continue with your normal code here after this block
+    elif cb.data == "forward_tag":
+        try:
+            user_msg = await client.ask(
+                chat_id=message.from_user.id,
+                text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
+                timeout=300
+            )
+            msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
+            await db.update_user(message.from_user.id, {"forward_message_id": msg.message_id})
+            await user_msg.delete()
+        except asyncio.exceptions.TimeoutError:
+            return await message.reply("❌ Timed out. Please start again using /run.")
 
 
     await choose.delete()
