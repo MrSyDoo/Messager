@@ -291,7 +291,7 @@ async def stop_forwarding(client, message):
     await message.reply("Trying To Stop.")
     
 @Client.on_message(filters.command("run") & filters.private)
-async def run_forwarding(client, message):
+async def run_forwarding(client: Client, message: Message):
     user_id = message.from_user.id
     user = await db.get_user(user_id)
     usr = await client.get_users(user_id)
