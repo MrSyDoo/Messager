@@ -7,6 +7,7 @@ from config import Config, Txt
 from .start import db, temp
 import random
 from pyromod.exceptions import ListenerTimeout
+from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.channels import GetForumTopicsRequest
 import psutil
 from telethon.sessions import StringSession
@@ -143,10 +144,23 @@ async def cb_handler(client, query: CallbackQuery):
                     break
 
                 if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
+                    if getattr(d.entity, "forum", False):
+                        continue  # Skip forum groups
+
                     if d.id in existing_group_ids:
                         continue  # Already added
 
-                    group_data["groups"].append({"id": d.id, "last_sent": datetime.min})
+                    new_group = {"id": d.id, "last_sent": datetime.min}
+
+                    if is_premium:
+                        try:
+                            full_chat = await tg_client(GetFullChannelRequest(d.entity))
+                            slow_mode = getattr(full_chat.full_chat, "slowmode_seconds", 0)
+                            new_group["interval"] = slow_mode + 5
+                        except:
+                            pass  # Could not fetch slow mode
+
+                    group_data["groups"].append(new_group)
                     added_count += 1
 
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_data["groups"]}}, upsert=True)
