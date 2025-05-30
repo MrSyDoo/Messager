@@ -62,10 +62,13 @@ async def show_groups_for_account(client, message, user_id, account_index):
                 ])
 
         buttons.append([
+             InlineKeyboardButton("Aᴅᴅ Aʟʟ Gʀᴏᴜᴘꜱ", callback_data=f"add_all_groups_{account_index}")
+       ])
+        buttons.append([
             InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data="back_to_accounts"),
             InlineKeyboardButton("↻ Rᴇꜱᴇᴛ ↻", callback_data=f"delete_all_{account_index}")
         ])
-        await message.reply("Sᴇʟᴇᴄᴛ ʏᴏᴜʀ ɢʀᴏᴜᴩꜱ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ:", reply_markup=InlineKeyboardMarkup(buttons))
+        await message.edit_text("Sᴇʟᴇᴄᴛ ʏᴏᴜʀ ɢʀᴏᴜᴩꜱ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ:", reply_markup=InlineKeyboardMarkup(buttons))
 
 
 @Client.on_callback_query()
@@ -230,7 +233,7 @@ async def cb_handler(client, query: CallbackQuery):
 
                 await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
                 await query.answer("Gʀᴏᴜᴩ ᴇɴᴀʙʟᴇᴅ/ᴜᴩᴅᴀᴛᴇᴅ ✅", show_alert=True)
-                await query.message.delete()
+               # await query.message.delete()
                 await prompt.delete()
                 await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
@@ -307,7 +310,7 @@ async def cb_handler(client, query: CallbackQuery):
                     group_list = [g for g in group_list if g["id"] != group_id]
                     await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                     await query.message.reply_text("✅ Group deleted.")
-                    await query.message.delete()
+                    #await query.message.delete()
                     return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
                 if text == "/add":
@@ -366,7 +369,7 @@ async def cb_handler(client, query: CallbackQuery):
             # Clear all groups for this session user
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": []}}, upsert=True)
             await query.answer("All group data deleted.", show_alert=True)
-            await query.message.delete()
+           # await query.message.delete()
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
     elif data == "help":
