@@ -118,6 +118,38 @@ async def cb_handler(client, query: CallbackQuery):
         )
 
     # === Group Selection ===
+    elif data.startswith("add_all_groups_"):
+        account_index = int(data.split("_")[-1])
+
+        user = await db.get_user(query.from_user.id)
+        is_premium = user.get("is_premium", False)
+        session_str = user["accounts"][account_index]["session"]
+
+        async with TelegramClient(StringSession(session_str), Config.API_ID, Config.API_HASH) as tg_client:
+            me = await tg_client.get_me()
+            session_user_id = me.id
+            group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
+            existing_group_ids = {g["id"] for g in group_data["groups"]}
+            limit = user.get("group_limit", FREE_GROUP) if not is_premium else 1000
+
+            dialogs = await tg_client.get_dialogs()
+            added_count = 0
+
+            for d in dialogs:
+                if added_count + len(existing_group_ids) >= limit:
+                    break
+
+                if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
+                    if d.id in existing_group_ids:
+                        continue  # Already added
+
+                    group_data["groups"].append({"id": d.id, "last_sent": datetime.min})
+                    added_count += 1
+
+            await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_data["groups"]}}, upsert=True)
+            await query.answer(f"✅ {added_count} ɴᴇᴡ ɢʀᴏᴜᴘꜱ ᴀᴅᴅᴇᴅ.", show_alert=True)
+            await show_groups_for_account(client, query.message, query.from_user.id, account_index)
+
     elif data.startswith("group_"):
         parts = data.split("_")
         group_id = int(parts[1])
