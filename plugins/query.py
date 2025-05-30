@@ -143,9 +143,6 @@ async def cb_handler(client, query: CallbackQuery):
                     break
 
                 if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
-                    if getattr(d.entity, "forum", False):
-                        continue  # Skip forum groups
-
                     if d.id in existing_group_ids:
                         continue  # Already added
 
@@ -153,11 +150,12 @@ async def cb_handler(client, query: CallbackQuery):
 
                     if is_premium:
                         try:
-                            full_chat = await tg_client(GetFullChannelRequest(d.entity))
+                            input_channel = await tg_client.get_input_entity(d.entity)
+                            full_chat = await tg_client(GetFullChannelRequest(input_channel))
                             slow_mode = getattr(full_chat.full_chat, "slowmode_seconds", 0)
                             new_group["interval"] = slow_mode + 5
-                        except:
-                            pass  # Could not fetch slow mode
+                        except Exception as e:
+                            print(f"Failed to fetch slow mode for {d.id}: {e}")  # Could not fetch slow mode
 
                     group_data["groups"].append(new_group)
                     added_count += 1
