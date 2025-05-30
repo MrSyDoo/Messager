@@ -414,6 +414,29 @@ async def admin_command(client, message: Message):
     await message.reply_text(f"Updated `{command}` settings for user `{user_id}`.")
 
 
+@Client.on_message(filters.command("account") & filters.private)
+async def show_accounts_interval(client: Client, message: Message):
+    user_id = message.from_user.id
+    user = await db.get_user(user_id)
+    if not user or not user.get("accounts"):
+        return await message.reply("❗ Please add an account first using /add_account")
+
+    buttons = []
+    for i, acc in enumerate(user["accounts"]):
+        try:
+            async with TelegramClient(StringSession(acc["session"]), Config.API_ID, Config.API_HASH) as userbot:
+                me = await userbot.get_me()
+                acc_name = me.first_name or me.username or f"Account {i+1}"
+        except Exception:
+            acc_name = f"Account {i+1} (invalid)"
+        buttons.append([
+            InlineKeyboardButton(f"{acc_name}", callback_data=f"set_interval_account_{i}")
+        ])
+
+    await message.reply(
+        "🕒 Choose an account to set the default interval:",
+        reply_markup=InlineKeyboardMarkup(buttons)
+    )
 
 
 @Client.on_message(filters.command("groups") & filters.private)
