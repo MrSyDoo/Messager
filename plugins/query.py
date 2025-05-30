@@ -445,7 +445,29 @@ async def cb_handler(client, query: CallbackQuery):
             ]])
         )
 
-   
+    elif data == "normal":
+        user = await db.get_user(user_id)
+        await query.answer()
+        await query.message.delete()
+        await start_forwarding_process(client, user_id, user)
+
+    elif data == "forward":
+        user = await db.get_user(user_id)
+        await query.answer()
+        await query.message.delete()
+        try:
+            user_msg = await client.ask(
+                chat_id=user_id,
+                text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
+                timeout=300
+            )
+            msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
+            await db.update_user(user_id, {"forward_message_id": msg.message_id})
+            await user_msg.delete()
+            await client.send_message(user_id, "Message saved with tag. Starting forwarding...")
+            await start_forwarding_process(client, user_id, user)
+        except asyncio.exceptions.TimeoutError:
+            await client.send_message(user_id, "❌ Timed out. Please start again using /run.")
 
     elif data == "add_account":
         user_id = query.from_user.id
