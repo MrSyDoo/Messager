@@ -430,6 +430,72 @@ async def cb_handler(client, query: CallbackQuery):
            # await query.message.delete()
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
+    elif query.data.startswith("join_group_account_"):
+        user_id = query.from_user.id
+        user = await db.get_user(user_id)
+        if not user:
+            return await query.answer("❗ User not found.", show_alert=True)
+
+        index = int(query.data.split("_")[-1])
+        accounts = user.get("accounts", [])
+        if index >= len(accounts):
+            return await query.answer("❗ Invalid account selected.", show_alert=True)
+
+        prompt = await query.message.reply(
+            "🔗 Send the **group** link you want this account to join.\n\nOnly groups are supported.\n\nOr send /cancel to abort.",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+
+        try:
+            response = await client.listen(
+                chat_id=user_id,
+                filters=filters.text,
+                timeout=60
+            )
+            text = response.text.strip()
+
+            if text.lower() == "/cancel":
+                await prompt.delete()
+                return await query.message.reply("❌ Cancelled.")
+
+            link = text
+
+            session = StringSession(accounts[index]["session"])
+            async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
+                try:
+                    from telethon.tl.functions.messages import ImportChatInviteRequest
+                    from telethon.tl.functions.channels import JoinChannelRequest
+                    from telethon.tl.types import Channel, Chat
+                    from urllib.parse import urlparse
+
+                    parsed = urlparse(link)
+                    if "joinchat" in parsed.path or parsed.path.startswith("/+"):
+                        invite_hash = parsed.path.split("/")[-1]
+                        updates = await userbot(ImportChatInviteRequest(invite_hash))
+                        entity = updates.chats[0]
+                    else:
+                        entity = await userbot.get_entity(link)
+                        await userbot(JoinChannelRequest(entity))
+
+                    # Ensure it's a group (not a channel or private chat)
+                    if isinstance(entity, Channel) and entity.megagroup:
+                        await prompt.delete()
+                        await query.message.reply("✅ Successfully joined the group.")
+                    elif isinstance(entity, Chat):
+                        await prompt.delete()
+                        await query.message.reply("✅ Successfully joined the group.")
+                    else:
+                        await prompt.delete()
+                        await query.message.reply("⚠️ That link is not a group. Only groups are supported.")
+
+                except Exception as e:
+                    await prompt.delete()
+                    await query.message.reply(f"❌ Failed to join group:\n`{e}`", parse_mode=enums.ParseMode.MARKDOWN)
+
+        except ListenerTimeout:
+            await prompt.delete()
+            await query.message.reply("⏱️ Timeout. Please try again.")
+
     elif data == "help":
 
         await query.message.edit_media(
