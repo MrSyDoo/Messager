@@ -167,6 +167,7 @@ async def cb_handler(client, query: CallbackQuery):
             await query.answer(f"✅ {added_count} ɴᴇᴡ ɢʀᴏᴜᴘꜱ ᴀᴅᴅᴇᴅ.", show_alert=True)
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
+        
     elif data.startswith("group_"):
         parts = data.split("_")
         group_id = int(parts[1])
@@ -190,10 +191,34 @@ async def cb_handler(client, query: CallbackQuery):
                 if len(group_list) >= int(limit):
                     return await query.answer("Group limit reached.", show_alert=True)
 
+                # Get current interval from group_list if exists
+                current_interval = None
+                for g in group_list:
+                    if g["id"] == group_id and "interval" in g:
+                        current_interval = g["interval"]
+                        break
+
+                # Default intervals depending on user type
+                default_interval = 300 if (is_premium or can_use_interval) else 7200  # 5 min or 2 hrs
+
+                # Fetch slowmode from chat info (if possible)
+                slow_mode = 0
+                try:
+                    full_chat = await tg_client(GetFullChannelRequest(entity))
+                    slow_mode = getattr(full_chat.full_chat, "slowmode_seconds", 0)
+                except:
+                    pass
+
+                prompt_text = (
+                    f"Current interval: {current_interval if current_interval is not None else default_interval} seconds\n"
+                    f"Slow mode delay in this chat: {slow_mode} seconds\n\n"
+                    "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] Oʀ Sᴇɴᴅ /add Tᴏ Aᴅᴅ Gʀᴏᴜᴩ Oɴʟʏ ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
+                )
+
                 interval_value = None
                 add_command = False
                 try:
-                    prompt = await query.message.reply("Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] Oʀ Sᴇɴᴅ /add Tᴏ Aᴅᴅ Gʀᴏᴜᴩ Oɴʟʏ ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ.")
+                    prompt = await query.message.reply(prompt_text)
                     response = await client.listen(
                         chat_id=query.from_user.id,
                         filters=filters.text,
@@ -247,10 +272,8 @@ async def cb_handler(client, query: CallbackQuery):
 
                 await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
                 await query.answer("Gʀᴏᴜᴩ ᴇɴᴀʙʟᴇᴅ/ᴜᴩᴅᴀᴛᴇᴅ ✅", show_alert=True)
-               # await query.message.delete()
                 await prompt.delete()
                 await show_groups_for_account(client, query.message, query.from_user.id, account_index)
-
             else:
                 try:
                     topics = await tg_client(GetForumTopicsRequest(
@@ -284,6 +307,7 @@ async def cb_handler(client, query: CallbackQuery):
                     await query.answer("Failed to fetch topics.", show_alert=True)
 
 
+        
     elif data.startswith("topic_"):
         parts = data.split("_")
         group_id = int(parts[1])
@@ -305,12 +329,35 @@ async def cb_handler(client, query: CallbackQuery):
             if len(group_list) >= int(limit):
                 return await query.answer("Group limit reached.", show_alert=True)
 
+            # Get current interval if set for this group
+            current_interval = None
+            for g in group_list:
+                if g["id"] == group_id and "interval" in g:
+                    current_interval = g["interval"]
+                    break
+
+            # Default intervals depending on user type
+            default_interval = 300 if (is_premium or can_use_interval) else 7200  # 5 min or 2 hrs
+
+            # Try to get slow mode of the group/topic
+            slow_mode = 0
+            try:
+                entity = await tg_client.get_entity(group_id)
+                full_chat = await tg_client(GetFullChannelRequest(entity))
+                slow_mode = getattr(full_chat.full_chat, "slowmode_seconds", 0)
+            except:
+                pass
+
+            prompt_text = (
+                f"Current interval: {current_interval if current_interval is not None else default_interval} seconds\n"
+                f"Slow mode delay in this chat: {slow_mode} seconds\n\n"
+                "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /add Tᴏ Sᴋɪᴩ (ᴏɴʟʏ ᴀᴅᴅ ᴛʜᴇ ɢʀᴏᴜᴩ) ᴏʀ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
+            )
+
             interval_value = None
             add_command = False
             try:
-                prompt = await query.message.reply(
-                    "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /add Tᴏ Sᴋɪᴩ (ᴏɴʟʏ ᴀᴅᴅ ᴛʜᴇ ɢʀᴏᴜᴩ) ᴏʀ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
-                )
+                prompt = await query.message.reply(prompt_text)
                 response = await client.listen(
                     chat_id=query.from_user.id,
                     filters=filters.text,
@@ -324,7 +371,7 @@ async def cb_handler(client, query: CallbackQuery):
                     group_list = [g for g in group_list if g["id"] != group_id]
                     await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                     await query.message.reply_text("✅ Group deleted.")
-                    #await query.message.delete()
+                    # await query.message.delete()
                     return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
                 if text == "/add":
@@ -366,9 +413,8 @@ async def cb_handler(client, query: CallbackQuery):
                 await query.answer("Gʀᴏᴜᴩ ᴡɪᴛʜ ᴛᴏᴩɪᴄ ᴀᴅᴅᴇᴅ ✅", show_alert=True)
 
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
-
-        await query.message.delete()
         await show_groups_for_account(client, query.message, query.from_user.id, account_index)
+
 
 
     elif data.startswith("delete_all_"):
