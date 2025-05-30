@@ -96,7 +96,15 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
             print(f"Failed to check user data: {e}")
 
         try:
-            last_msg = (await tele_client.get_messages("me", limit=1))[0]
+            forward_entry = await db.get_user(user_id)
+            use_forward = forward_entry.get("forward_message_id", None)
+            if use_forward:
+                msg_id = forward_entry.get("forward_message_id")
+                last_msg = await tele_client.get_messages(entity=Config.MES_CHANNEL, ids=msg_id)
+                #use_forward = True
+            else:
+                last_msg = (await tele_client.get_messages("me", limit=1))[0]
+               # use_forward = False
         except Exception as e:
             print(f"Failed to fetch message: {e}")
             await client.send_message(user_id, f"Error in Getting Message: {e}")
@@ -119,11 +127,19 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                         break
                     await asyncio.sleep(1)
             try:
-                await tele_client.send_message(
-                    gid,
-                    last_msg,
-                    reply_to=topic_id if topic_id else None
-                )
+                if use_forward:
+                    await tele_client.forward_messages(
+                        entity=gid,
+                        messages=last_msg.id,
+                        from_peer=Config.MES_CHANNEL,
+                        reply_to=topic_id if topic_id else None
+                    )
+                else:
+                    await tele_client.send_message(
+                        gid,
+                        last_msg,
+                        reply_to=topic_id if topic_id else None
+                    )
                 grp["last_sent"] = datetime.now()
                 me = await tele_client.get_me()
                 await db.group.update_one({"_id": me.id}, {"$set": {"groups": groups}})
@@ -142,6 +158,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
             await asyncio.sleep(interval)
 
     await client.send_message(user_id, "Sᴛᴏᴩᴩᴇᴅ..!")
+    await db.update_user(user_id, {"forward_message_id": None})
     syd = await client.send_message(user_id, "Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
 
     entries = await db.user_messages.find({"user_id": user_id}).to_list(None)
@@ -274,7 +291,7 @@ async def stop_forwarding(client, message):
     await message.reply("Trying To Stop.")
     
 @Client.on_message(filters.command("run") & filters.private)
-async def run_forarding(client, message):
+async def run_forwarding(client, message):
     user_id = message.from_user.id
     user = await db.get_user(user_id)
     usr = await client.get_users(user_id)
@@ -283,13 +300,44 @@ async def run_forarding(client, message):
         return await message.reply("No userbot account found. Use /add_account first.")
 
     if user.get("enabled", False):
-        return await message.reply("Forwarding already running. Use /stop to end it before starting again.")
+        return await message.reply("Fᴏʀᴡᴀʀᴅɪɴɢ ᴀʟʀᴇᴀᴅʏ ʀᴜɴɴɪɴɢ. Uꜱᴇ /stop ᴛᴏ ᴇɴᴅ ɪᴛ ʙᴇꜰᴏʀᴇ ꜱᴛᴀʀᴛɪɴɢ ᴀɢᴀɪɴ.")
 
-    syd = await message.reply("Starting...")
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("Fᴏʀᴡᴀʀᴅ : Sᴀᴠᴇᴅ Mᴇꜱꜱᴀɢᴇ", callback_data="normal"),
+            InlineKeyboardButton("Fᴏʀᴡᴀʀᴅ : Wɪᴛʜ Tᴀɢ", callback_data="forward")
+        ]
+    ])
+    choose = await message.reply(
+        "Hᴏᴡ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇɴᴅ ᴛʜᴇ ᴍᴇꜱꜱᴀɢᴇ?\nCʟɪᴄᴋ ᴏɴ ꜱᴀᴠᴇᴅ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ꜱᴇɴᴅ ʟᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇ ꜱᴀᴠᴇᴅ ʙʏ ᴛʜᴇ ᴜꜱᴇʀ ʙᴏᴛ\nCʟɪᴄᴋ ᴏɴ ᴡɪᴛʜ ᴛᴀɢ ɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇɴᴅ ᴍᴇꜱꜱᴀɢᴇ ᴡɪᴛʜ ᴛʜᴇ ꜰᴏʀᴡᴀʀᴅ ᴛᴀɢ [ʏᴏᴜ ʜᴀᴠᴇ ᴛᴏ ɢɪᴠᴇ ᴛʜᴇ ɪɴᴩᴜᴛ ꜰᴏʀ ᴛʜᴀᴛ] \nCʜᴏᴏꜱᴇ ᴀɴ ᴏᴩᴛɪᴏɴ ʙᴇʟᴏᴡ (timeout 60s):",
+        reply_markup=keyboard
+    )
+    try:
+        cb: CallbackQuery = await client.listen(user_id, timeout=60)
+    except asyncio.exceptions.TimeoutError:
+        await choose.delete()
+        await message.reply("Tɪᴍᴇ ᴏᴜᴛ, Cʟɪᴄᴋ ᴏɴ /run ᴛᴏ ꜱᴛᴀʀᴛ ᴀɢᴀɪɴ")
+        return
 
+    if cb.data.startswith("forward"):
+        try:
+            user_msg = await client.ask(
+                chat_id=user_id,
+                text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
+                timeout=300
+            )
+            msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)  
+            # Store the message ID in DB
+            await db.update_user(user_id, {"forward_message_id": msg.message_id})
+            await user_msg.delete()
+        except asyncio.exceptions.TimeoutError:
+            return await message.reply("❌ Timed out. Please start again using /run.")
+
+    await choose.delete()
+    syd = await message.reply("Starting....")
     is_premium = user.get("is_premium", False)
     can_use_interval = user.get("can_use_interval", False)
-    
+
     clients = []
     user_groups = []
 
@@ -301,8 +349,7 @@ async def run_forarding(client, message):
 
         me = await tele_client.get_me()
         session_user_id = me.id
-        username = f"For @{message.from_user.username}" if message.from_user.username else " "
-        
+
         group_data = await db.group.find_one({"_id": session_user_id}) or {"groups": []}
         groups = group_data["groups"]
         user_groups.append(groups)
@@ -327,13 +374,11 @@ async def run_forarding(client, message):
         account_name = me.first_name or me.username or "Unknown"
         group_lines = []
 
-        group_list = user_groups[i]  # List of group dicts with {"id", maybe "topic_id"}
-        for group in group_list:
+        for group in groups:
             try:
                 entity = await tele_client.get_entity(group["id"])
                 group_title = entity.title if hasattr(entity, "title") else str(group["id"])
 
-                # Check for topic_id and get the topic title if present
                 if "topic_id" in group:
                     topics = await tele_client(GetForumTopicsRequest(
                         channel=entity,
@@ -342,7 +387,6 @@ async def run_forarding(client, message):
                         offset_topic=0,
                         limit=100
                     ))
-
                     topic = next((t for t in topics.topics if t.id == group["topic_id"]), None)
                     if topic:
                         group_title += f" ({topic.title})"
@@ -350,7 +394,7 @@ async def run_forarding(client, message):
                         group_title += f" (Topic ID: {group['topic_id']})"
 
                 group_lines.append(f"  - {group_title}")
-            except Exception as e:
+            except Exception:
                 group_lines.append(f"  - Failed to fetch group {group.get('id')}")
 
         account_group_summary += f"\n<b>{account_name}</b>:\n" + "\n".join(group_lines) + "\n"
@@ -369,7 +413,6 @@ async def run_forarding(client, message):
         )
     except:
         pass
-
         
 
 @Client.on_message(filters.command(["interval", "group_limit", "account_limit"]) & filters.user(Config.ADMIN))
