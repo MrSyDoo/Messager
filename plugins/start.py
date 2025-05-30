@@ -562,8 +562,13 @@ async def show_accounts_interval(client: Client, message: Message):
     if not user or not user.get("accounts"):
         return await message.reply("❗ Please add an account first using /add_account")
 
+    accounts = user["accounts"]
+
+    if len(accounts) == 1:
+        return await message.reply("⚠️ You only have one account. Interval applies only when multiple accounts are used.")
+
     buttons = []
-    for i, acc in enumerate(user["accounts"]):
+    for i, acc in enumerate(accounts):
         try:
             async with TelegramClient(StringSession(acc["session"]), Config.API_ID, Config.API_HASH) as userbot:
                 me = await userbot.get_me()
