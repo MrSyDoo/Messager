@@ -313,7 +313,7 @@ async def run_forwarding(client, message):
         reply_markup=keyboard
     )
     try:
-        cb: CallbackQuery = await client.listen(user_id, timeout=60)
+        cb: CallbackQuery = await client.listen(user_id, filters=filters.callback_query, timeout=60)
     except asyncio.exceptions.TimeoutError:
         await choose.delete()
         await message.reply("Tɪᴍᴇ ᴏᴜᴛ, Cʟɪᴄᴋ ᴏɴ /run ᴛᴏ ꜱᴛᴀʀᴛ ᴀɢᴀɪɴ")
