@@ -97,7 +97,6 @@ async def cb_handler(client, query: CallbackQuery):
 
     elif data.startswith("choose_account_"):
         index = int(data.split("_")[-1])
-        await query.message.delete()
         await show_groups_for_account(client, query.message, user_id, index)
 
     # === Go Back ===
