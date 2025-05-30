@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from pyrogram import Client, filters
 from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from config import Config, Txt
-from .start import db, temp
+from .start import db, temp, start_forwarding_loop, start_forwarding_process
 import random
 from pyromod.exceptions import ListenerTimeout
 from telethon.tl.functions.channels import GetFullChannelRequest
