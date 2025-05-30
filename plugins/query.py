@@ -565,8 +565,12 @@ async def cb_handler(client, query: CallbackQuery):
         if index >= len(accounts):
             return await query.answer("❗ Invalid account selected.", show_alert=True)
 
-        default_interval = accounts[index].get("default_interval")
-        current = f"`{default_interval}` seconds" if default_interval else "not set"
+        session = StringSession(accounts[index]["session"])
+        async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
+            me = await userbot.get_me()
+            group_data = await db.group.find_one({"_id": me.id}) or {}
+            default_interval = group_data.get("interval")
+            current = f"`{default_interval}` seconds" if default_interval else "not set"
 
         prompt = await query.message.reply(
             f"🕒 Send a default interval in seconds for this account.\n\nCurrent: {current}\n\nOr send /cancel to skip."
@@ -585,21 +589,27 @@ async def cb_handler(client, query: CallbackQuery):
                 return await query.message.reply("❌ Cancelled.")
 
             interval = int(text)
-            user["accounts"][index]["default_interval"] = interval
 
-            await db.users.update_one(
-                {"_id": user_id},
-                {"$set": {f"accounts.{index}.default_interval": interval}}
-            )
+            # Save only to db.group using account ID
+            session = StringSession(accounts[index]["session"])
+            async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
+                me = await userbot.get_me()
+                await db.group.update_one(
+                    {"_id": me.id},
+                    {"$set": {"interval": interval}},
+                    upsert=True
+                )
+
             await prompt.delete()
             await query.message.reply(f"✅ Interval updated to `{interval}` seconds.")
 
         except ListenerTimeout:
             await prompt.delete()
-            return await query.message.reply("⏱️ Timeout! Try again.")
+            await query.message.reply("⏱️ Timeout! Try again.")
         except ValueError:
             await prompt.delete()
-            return await query.message.reply("⚠️ Invalid input. Please enter a number.")
+            await query.message.reply("⚠️ Invalid input. Please enter a number.")
+
 
     elif data.startswith("choose_delete_"):
         index = int(data.split("_")[-1])
