@@ -230,7 +230,12 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                     "time": datetime.now(tz=india)
                     })
             except Exception as e:
-                print(f"Error sending to {gid}: {e}")
+                try:
+                    entity = await tele_client.get_entity(gid)
+                    group_name = getattr(entity, "title", str(gid))
+                except Exception:
+                    group_name = str(gid)
+                print(f"Error sending to {group_name}: {e}")
                 await client.send_message(user_id, f"Error sending to {gid}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
 
         for _ in range(total_slep // interval):
