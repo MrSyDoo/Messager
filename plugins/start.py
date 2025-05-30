@@ -313,25 +313,42 @@ async def run_forwarding(client, message):
         reply_markup=keyboard
     )
     try:
-        cb: CallbackQuery = await client.listen(user_id, filters=filters.callback_query, timeout=60)
+        event = await client.listen(user_id, timeout=60)
     except asyncio.exceptions.TimeoutError:
         await choose.delete()
         await message.reply("Tɪᴍᴇ ᴏᴜᴛ, Cʟɪᴄᴋ ᴏɴ /run ᴛᴏ ꜱᴛᴀʀᴛ ᴀɢᴀɪɴ")
         return
 
-    if cb.data.startswith("forward"):
-        try:
-            user_msg = await client.ask(
-                chat_id=user_id,
-                text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
-                timeout=300
-            )
-            msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)  
-            # Store the message ID in DB
-            await db.update_user(user_id, {"forward_message_id": msg.message_id})
-            await user_msg.delete()
-        except asyncio.exceptions.TimeoutError:
-            return await message.reply("❌ Timed out. Please start again using /run.")
+    if isinstance(event, CallbackQuery):
+        cb = event
+        await cb.answer()
+        await choose.delete()
+
+        if cb.data == "normal":
+            pass  # Just pass, no changes or returns here
+
+        elif cb.data.startswith("forward"):
+            try:
+                user_msg = await client.ask(
+                    chat_id=user_id,
+                    text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
+                    timeout=300
+                )
+                msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
+                await db.update_user(user_id, {"forward_message_id": msg.message_id})
+                await user_msg.delete()
+            except asyncio.exceptions.TimeoutError:
+                return await message.reply("❌ Timed out. Please start again using /run.")
+
+        else:
+            return await message.reply("❌ Unknown option. Please restart with /run.")
+
+    else:
+        await choose.delete()
+        return await message.reply("❌ Invalid response. Start again with /run.")
+
+    # continue with your normal code here after this block
+
 
     await choose.delete()
     syd = await message.reply("Starting....")
