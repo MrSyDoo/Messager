@@ -535,7 +535,53 @@ async def cb_handler(client, query: CallbackQuery):
             ]])
         )
 
-   
+    elif query.data.startswith("set_interval_account_"):
+        user_id = query.from_user.id
+        user = await db.get_user(user_id)
+        if not user:
+            return await query.answer("❗ User not found.", show_alert=True)
+
+        index = int(query.data.split("_")[-1])
+        accounts = user.get("accounts", [])
+        if index >= len(accounts):
+            return await query.answer("❗ Invalid account selected.", show_alert=True)
+
+        default_interval = accounts[index].get("default_interval")
+        current = f"`{default_interval}` seconds" if default_interval else "not set"
+
+        prompt = await query.message.reply(
+            f"🕒 Send a default interval in seconds for this account.\n\nCurrent: {current}\n\nOr send /cancel to skip."
+        )
+
+        try:
+            response = await client.listen(
+                chat_id=query.from_user.id,
+                filters=filters.text,
+                timeout=30
+            )
+            text = response.text.strip()
+
+            if text.lower() == "/cancel":
+                await prompt.delete()
+                return await query.message.reply("❌ Cancelled.")
+
+            interval = int(text)
+            user["accounts"][index]["default_interval"] = interval
+
+            await db.users.update_one(
+                {"_id": user_id},
+                {"$set": {f"accounts.{index}.default_interval": interval}}
+            )
+            await prompt.delete()
+            await query.message.reply(f"✅ Interval updated to `{interval}` seconds.")
+
+        except ListenerTimeout:
+            await prompt.delete()
+            return await query.message.reply("⏱️ Timeout! Try again.")
+        except ValueError:
+            await prompt.delete()
+            return await query.message.reply("⚠️ Invalid input. Please enter a number.")
+
     elif data.startswith("choose_delete_"):
         index = int(data.split("_")[-1])
         user_id = query.from_user.id
