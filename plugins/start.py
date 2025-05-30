@@ -50,6 +50,87 @@ class Database:
 
 db = Database(Config.DB_URL, Config.DB_NAME)
 
+async def start_forwarding_process(client: Client, user_id: int, user: dict):
+    syd = await client.send_message(user_id, "Starting....")
+    is_premium = user.get("is_premium", False)
+    can_use_interval = user.get("can_use_interval", False)
+
+    clients = []
+    user_groups = []
+
+    for acc in user["accounts"]:
+        session = StringSession(acc["session"])
+        tele_client = TelegramClient(session, Config.API_ID, Config.API_HASH)
+        await tele_client.start()
+        clients.append(tele_client)
+
+        me = await tele_client.get_me()
+        session_user_id = me.id
+
+        group_data = await db.group.find_one({"_id": session_user_id}) or {"groups": []}
+        groups = group_data["groups"]
+        user_groups.append(groups)
+
+    if not any(user_groups):
+        await syd.delete()
+        return await client.send_message(user_id, "No groups selected. Use /groups to add some.")
+
+    sessions[user_id] = clients
+    await db.update_user(user_id, {"enabled": True})
+    await syd.delete()
+    await client.send_message(user_id, "Forwarding started.")
+
+    account_group_summary = ""
+
+    for i, tele_client in enumerate(clients):
+        groups = user_groups[i]
+        asyncio.create_task(
+            start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
+        )
+        me = await tele_client.get_me()
+        account_name = me.first_name or me.username or "Unknown"
+        group_lines = []
+
+        for group in groups:
+            try:
+                entity = await tele_client.get_entity(group["id"])
+                group_title = entity.title if hasattr(entity, "title") else str(group["id"])
+
+                if "topic_id" in group:
+                    topics = await tele_client(GetForumTopicsRequest(
+                        channel=entity,
+                        offset_date=0,
+                        offset_id=0,
+                        offset_topic=0,
+                        limit=100
+                    ))
+                    topic = next((t for t in topics.topics if t.id == group["topic_id"]), None)
+                    if topic:
+                        group_title += f" ({topic.title})"
+                    else:
+                        group_title += f" (Topic ID: {group['topic_id']})"
+
+                group_lines.append(f"  - {group_title}")
+            except Exception:
+                group_lines.append(f"  - Failed to fetch group {group.get('id')}")
+
+        account_group_summary += f"\n<b>{account_name}</b>:\n" + "\n".join(group_lines) + "\n"
+
+    if account_group_summary.strip():
+        await client.send_message(
+            user_id,
+            f"<b>Accounts and Groups For Forwarding:</b>\n{account_group_summary}\n\nSend /stop to stop the process",
+            parse_mode=enums.ParseMode.HTML
+        )
+    try:
+        usr = await client.get_users(user_id)
+        await client.send_message(
+            Config.LOG_CHANNEL,
+            f"#Process \n🧊 Fᴏʀᴡᴀʀᴅɪɴɢ ꜱᴛᴀʀᴛᴇᴅ ʙʏ <a href='tg://user?id={user_id}'>{usr.first_name}</a> (User ID: <code>{user_id}</code>)\n\n{account_group_summary}",
+            parse_mode=enums.ParseMode.HTML
+        )
+    except Exception:
+        pass
 
 
 async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, index):
@@ -304,7 +385,8 @@ async def run_forwarding(client: Client, message: Message):
 
     keyboard = InlineKeyboardMarkup([
         [
-            InlineKeyboardButton("Fᴏʀᴡᴀʀᴅ : Sᴀᴠᴇᴅ Mᴇꜱꜱᴀɢᴇ", callback_data="normal"),
+            InlineKeyboardButton("Fᴏʀᴡᴀʀᴅ : Sᴀᴠᴇᴅ Mᴇꜱꜱᴀɢᴇ", callback_data="normal")
+        ], [
             InlineKeyboardButton("Fᴏʀᴡᴀʀᴅ : Wɪᴛʜ Tᴀɢ", callback_data="forward")
         ]
     ])
@@ -312,7 +394,7 @@ async def run_forwarding(client: Client, message: Message):
         "Hᴏᴡ ᴅᴏ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇɴᴅ ᴛʜᴇ ᴍᴇꜱꜱᴀɢᴇ?\nCʟɪᴄᴋ ᴏɴ ꜱᴀᴠᴇᴅ ᴍᴇꜱꜱᴀɢᴇ ᴛᴏ ꜱᴇɴᴅ ʟᴀꜱᴛ ᴍᴇꜱꜱᴀɢᴇ ꜱᴀᴠᴇᴅ ʙʏ ᴛʜᴇ ᴜꜱᴇʀ ʙᴏᴛ\nCʟɪᴄᴋ ᴏɴ ᴡɪᴛʜ ᴛᴀɢ ɪꜰ ʏᴏᴜ ᴡᴀɴᴛ ᴛᴏ ꜱᴇɴᴅ ᴍᴇꜱꜱᴀɢᴇ ᴡɪᴛʜ ᴛʜᴇ ꜰᴏʀᴡᴀʀᴅ ᴛᴀɢ [ʏᴏᴜ ʜᴀᴠᴇ ᴛᴏ ɢɪᴠᴇ ᴛʜᴇ ɪɴᴩᴜᴛ ꜰᴏʀ ᴛʜᴀᴛ] \nCʜᴏᴏꜱᴇ ᴀɴ ᴏᴩᴛɪᴏɴ ʙᴇʟᴏᴡ (timeout 60s):",
         reply_markup=keyboard
     )
-        
+    return
     try:
         cb: CallbackQuery = await client.listen(message.from_user.id, timeout=60)
     except asyncio.exceptions.TimeoutError:
