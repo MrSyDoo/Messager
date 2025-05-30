@@ -456,11 +456,8 @@ async def cb_handler(client, query: CallbackQuery):
         await query.answer()
         await query.message.delete()
         try:
-            user_msg = await client.ask(
-                chat_id=user_id,
-                text="Send the message you want to save.\n\n**With Tag. Timeout in 5min**",
-                timeout=300
-            )
+            await query.message.reply_text("Send the message you want to save.\n\n**With Tag. Timeout in 5min**")
+            user_msg = await client.listen(user_id, filters=filters.text & filters.private, timeout=300)
             msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
             await db.update_user(user_id, {"forward_message_id": msg.message_id})
             await user_msg.delete()
