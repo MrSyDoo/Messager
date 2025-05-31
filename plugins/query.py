@@ -2,7 +2,7 @@ import shutil
 import time
 import asyncio
 from datetime import datetime, timedelta
-from pyrogram import Client, filters
+from pyrogram import Client, filters, enums
 from pyrogram.types import CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, InputMediaPhoto
 from config import Config, Txt
 from .start import db, temp, start_forwarding_loop, start_forwarding_process
@@ -11,6 +11,11 @@ from pyromod.exceptions import ListenerTimeout
 from telethon.tl.functions.channels import GetFullChannelRequest
 from telethon.tl.functions.channels import GetForumTopicsRequest
 import psutil
+from telethon.tl.functions.messages import ImportChatInviteRequest
+from telethon.tl.functions.channels import JoinChannelRequest
+from telethon.tl.types import Channel, Chat
+from urllib.parse import urlparse
+
 from telethon.sessions import StringSession
 from telethon import TelegramClient
 from datetime import datetime
@@ -461,11 +466,7 @@ async def cb_handler(client, query: CallbackQuery):
             session = StringSession(accounts[index]["session"])
             async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
                 try:
-                    from telethon.tl.functions.messages import ImportChatInviteRequest
-                    from telethon.tl.functions.channels import JoinChannelRequest
-                    from telethon.tl.types import Channel, Chat
-                    from urllib.parse import urlparse
-
+                    
                     parsed = urlparse(link)
                     if "joinchat" in parsed.path or parsed.path.startswith("/+"):
                         invite_hash = parsed.path.split("/")[-1]
