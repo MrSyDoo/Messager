@@ -182,12 +182,46 @@ async def cb_handler(client, query: CallbackQuery):
             [InlineKeyboardButton("ɢʀᴏᴜᴩꜱ", callback_data=f"choose_account_{index}")],
             [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}"),
              InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
-            [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")]
+            [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")],
+            [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="get_every")],
         ]
 
         await query.message.edit_text(
             f"ꜱᴇᴛᴛɪɴɢꜱ ꜰᴏʀ ᴀᴄᴄᴏᴜɴᴛ {index+1}:",
             reply_markup=InlineKeyboardMarkup(buttons)
+        )
+        
+    elif query.data == "get_every":
+        user_id = query.from_user.id
+        user = await db.get_user(user_id)
+        if not user:
+            return await query.message.edit("❗ You are not registered.")
+
+        accounts = user.get("accounts", [])
+        if not accounts:
+            return await query.message.edit("😶 No accounts found.")
+
+        keyboard = []
+        for i, acc in enumerate(accounts):
+            session = StringSession(acc["session"])
+            async with TelegramClient(session, Config.API_ID, Config.API_HASH) as tg_client:
+                try:
+                    me = await tg_client.get_me()
+                    name = me.first_name or me.username or str(me.id)
+                    btn = InlineKeyboardButton(
+                        f"{name} ({me.id})",
+                        callback_data=f"choose_account_{i}"
+                    )
+                    keyboard.append([btn])
+                except Exception:
+                    keyboard.append([InlineKeyboardButton(
+                        f"Account {i+1} (Invalid)",
+                        callback_data=f"choose_account_{i}"
+                    )])
+
+        await query.message.edit(
+            "⚙️ Choose an account to manage settings:",
+            reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
     elif data.startswith("group_"):
