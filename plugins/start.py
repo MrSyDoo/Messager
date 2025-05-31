@@ -279,7 +279,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
     with open("forward.txt", "w", encoding="utf-8") as f:
         f.write(out)
 
-    await client.send_document(user_id, "forward.txt", caption=f"Fᴏʀᴡᴀʀᴅ ʟᴏɢꜱ: {index+1}")
+    await client.send_document(user_id, "forward.txt", caption=f"Fᴏʀᴡᴀʀᴅ ʟᴏɢꜱ")
     await db.user_messages.delete_many({"user_id": user_id})
     await syd.delete()
 
