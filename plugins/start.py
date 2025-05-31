@@ -235,11 +235,13 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                     })
             except Exception as e:
                 try:
-                    entity = await tele_client.get_entity(gid)
-                    group_name = getattr(entity, "title", str(gid))
+                    if not (await db.get_user(user_id)).get("enabled", False):
+                        break
+                    entty = await tele_client.get_entity(gid)
+                    grop_name = getattr(entity, "title", str(gid))
                 except Exception:
-                    group_name = str(gid)
-                print(f"Error sending to {group_name}: {e}")
+                    grop_name = str(gid)
+                print(f"Error sending to {grop_name}: {e}")
                 await client.send_message(user_id, f"Error sending to {gid}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
 
         for _ in range(total_slep // interval):
