@@ -12,6 +12,25 @@ FREE_ACCOUNT = Config.FREE_ACCOUNT
 API_HASH = Config.API_HASH
 API_ID = Config.API_ID
 
+@Client.on_message(filters.command("joingroup") & filters.private)
+async def joingroup_accounts(client: Client, message: Message):
+    user_id = message.from_user.id
+    user = await db.get_user(user_id)
+    if not user or not user.get("accounts"):
+        return await message.reply("❗ No accounts found. Add one using /add_account.")
+
+    buttons = []
+    for i, acc in enumerate(user["accounts"]):
+        try:
+            async with TelegramClient(StringSession(acc["session"]), Config.API_ID, Config.API_HASH) as userbot:
+                me = await userbot.get_me()
+                acc_name = me.first_name or me.username or f"Account {i+1}"
+        except Exception:
+            acc_name = f"Account {i+1} (invalid)"
+        buttons.append([InlineKeyboardButton(acc_name, callback_data=f"join_group_account_{i}")])
+
+    await message.reply("👥 Choose an account to join a group:", reply_markup=InlineKeyboardMarkup(buttons))
+
 @Client.on_message(filters.command("text") & filters.private)
 async def handle_text_command(client: Client, message: Message):
     user_id = message.from_user.id
