@@ -411,7 +411,10 @@ async def run_forwarding(client: Client, message: Message):
         reply_markup=keyboard
     )
     await asyncio.sleep(60)
-    await choose.delete()
+    try:
+        await choose.delete()
+    except:
+        pass
     return
    
 @Client.on_message(filters.command(["interval", "group_limit", "account_limit"]) & filters.user(Config.ADMIN))
