@@ -468,14 +468,20 @@ async def cb_handler(client, query: CallbackQuery):
                 try:
                     
                     parsed = urlparse(link)
-                    if "joinchat" in parsed.path or parsed.path.startswith("/+"):
-                        invite_hash = parsed.path.split("/")[-1]
+                    path = parsed.path.strip("/")  # remove leading/trailing slashes
+
+                    if path.startswith("joinchat/"):
+                        invite_hash = path.split("joinchat/")[-1]
+                        updates = await userbot(ImportChatInviteRequest(invite_hash))
+                        entity = updates.chats[0]
+                    elif path.startswith("+"):
+                        invite_hash = path[1:]
                         updates = await userbot(ImportChatInviteRequest(invite_hash))
                         entity = updates.chats[0]
                     else:
                         entity = await userbot.get_entity(link)
                         await userbot(JoinChannelRequest(entity))
-
+                        
                     # Ensure it's a group (not a channel or private chat)
                     if isinstance(entity, Channel) and entity.megagroup:
                         await prompt.delete()
