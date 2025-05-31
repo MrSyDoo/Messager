@@ -249,8 +249,10 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 break
             await asyncio.sleep(interval)
 
-    await client.send_message(user_id, "Sᴛᴏᴩᴩᴇᴅ..! {index+1}")
+    await client.send_message(user_id, f"Sᴛᴏᴩᴩᴇᴅ..! {index+1}")
     await db.update_user(user_id, {"forward_message_id": None})
+    if index > 0:
+        return
     syd = await client.send_message(user_id, "Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
 
     entries = await db.user_messages.find({"user_id": user_id}).to_list(None)
