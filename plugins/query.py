@@ -231,6 +231,8 @@ async def cb_handler(client, query: CallbackQuery):
                 except:
                     pass
 
+                if not slow_mode:
+                    slow_mode = 0
                 prompt_text = (
                     f"Current interval: {current_interval if current_interval is not None else default_interval} seconds\n"
                     f"Slow mode delay in this chat: {slow_mode} seconds\n\n"
@@ -261,6 +263,8 @@ async def cb_handler(client, query: CallbackQuery):
                         try:
                             interval = int(text)
                             if is_premium or can_use_interval:
+                                if slow_mode >= interval:
+                                    return await query.message.reply_text("ɪɴᴛᴇʀᴠᴀʟ ᴍᴜꜱᴛ ʙᴇ ɢʀᴇᴀᴛᴇʀ ᴛʜᴀɴ ꜱʟᴏᴡ ᴍᴏᴅᴇ")
                                 interval_value = interval
                             else:
                                 await prompt.delete()
@@ -369,6 +373,9 @@ async def cb_handler(client, query: CallbackQuery):
             except:
                 pass
 
+            if not slow_mode:
+                slow_mode = 0
+
             prompt_text = (
                 f"Current interval: {current_interval if current_interval is not None else default_interval} seconds\n"
                 f"Slow mode delay in this chat: {slow_mode} seconds\n\n"
@@ -400,6 +407,8 @@ async def cb_handler(client, query: CallbackQuery):
                     try:
                         interval = int(text)
                         if is_premium or can_use_interval:
+                            if slow_mode >= interval:
+                                return await query.message.reply_text("ɪɴᴛᴇʀᴠᴀʟ ᴍᴜꜱᴛ ʙᴇ ɢʀᴇᴀᴛᴇʀ ᴛʜᴀɴ ꜱʟᴏᴡ ᴍᴏᴅᴇ")
                             interval_value = interval
                         else:
                             return await query.message.reply_text("Interval only available to limited users.")
@@ -683,7 +692,9 @@ async def cb_handler(client, query: CallbackQuery):
                 return await query.message.reply("❌ Cancelled.")
 
             interval = int(text)
-
+            if 59 >= interval:
+                return await query.message.reply_text("ɪɴᴛᴇʀᴠᴀʟ ᴍᴜꜱᴛ ʙᴇ ɢʀᴇᴀᴛᴇʀ ᴛʜᴀɴ 60ꜱ")
+                               
             # Save only to db.group using account ID
             session = StringSession(accounts[index]["session"])
             async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
