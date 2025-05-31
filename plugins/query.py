@@ -133,7 +133,7 @@ async def cb_handler(client, query: CallbackQuery):
             me = await tg_client.get_me()
             session_user_id = me.id
             group_data = await db.group.find_one({"_id": session_user_id}) or {"_id": session_user_id, "groups": []}
-            existing_group_ids = {g["id"] for g in group_data["groups"]}
+            existing_group_ids = {g["id"] for g in group_data.get("groups", [])}
             limit = user.get("group_limit", FREE_GROUP) if not is_premium else 1000
 
             dialogs = await tg_client.get_dialogs()
