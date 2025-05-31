@@ -524,7 +524,7 @@ async def cb_handler(client, query: CallbackQuery):
             await query.message.reply_text("Send the message you want to save.\n\n**With Tag. Timeout in 5min**")
             user_msg = await client.listen(user_id, timeout=300)
             msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
-            await db.update_user(user_id, {"forward_message_id": msg.message_id})
+            await db.update_user(user_id, {"forward_message_id": msg.id})
             await user_msg.delete()
             await client.send_message(user_id, "Message saved with tag. Starting forwarding...")
             await start_forwarding_process(client, user_id, user)
