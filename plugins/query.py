@@ -179,7 +179,7 @@ async def cb_handler(client, query: CallbackQuery):
             return await query.answer("❗ Invalid account index.", show_alert=True)
 
         buttons = [
-            [InlineKeyboardButton("ɢʀᴜᴏᴩꜱ", callback_data=f"choose_account_{index}")],
+            [InlineKeyboardButton("ɢʀᴏᴜᴩꜱ", callback_data=f"choose_account_{index}")],
             [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}"),
              InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
             [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")]
