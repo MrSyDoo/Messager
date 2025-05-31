@@ -170,7 +170,26 @@ async def cb_handler(client, query: CallbackQuery):
             await query.answer(f"✅ {added_count} ɴᴇᴡ ɢʀᴏᴜᴘꜱ ᴀᴅᴅᴇᴅ.", show_alert=True)
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
-        
+
+    elif query.data.startswith("everything_"):
+        index = int(query.data.split("_")[-1])
+        user = await db.get_user(query.from_user.id)
+        accounts = user.get("accounts", [])
+        if index >= len(accounts):
+            return await query.answer("❗ Invalid account index.", show_alert=True)
+
+        buttons = [
+            [InlineKeyboardButton("ɢʀᴜᴏᴩꜱ", callback_data=f"choose_account_{index}")],
+            [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}")],
+            [InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
+            [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")]
+        ]
+
+        await query.message.edit_text(
+            f"⚙️ Settings for Account {index+1}:",
+            reply_markup=InlineKeyboardMarkup(buttons)
+        )
+
     elif data.startswith("group_"):
         parts = data.split("_")
         group_id = int(parts[1])
