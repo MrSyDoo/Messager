@@ -148,7 +148,7 @@ async def cb_handler(client, query: CallbackQuery):
                 if added_count + len(existing_group_ids) >= limit:
                     break
 
-                if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
+                if d.is_group: #or (d.is_channel and getattr(d.entity, "megagroup", False)):
                     if d.id in existing_group_ids:
                         continue  # Already added
 
@@ -167,7 +167,10 @@ async def cb_handler(client, query: CallbackQuery):
                     added_count += 1
 
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_data["groups"]}}, upsert=True)
-            await query.answer(f"✅ {added_count} ɴᴇᴡ ɢʀᴏᴜᴘꜱ ᴀᴅᴅᴇᴅ.", show_alert=True)
+            if is_premium:
+                await query.answer(f"✅ {added_count} ɴᴇᴡ ɢʀᴏᴜᴘꜱ ᴀᴅᴅᴇᴅ. [ᴇxᴄʟᴜᴅᴇᴅ ɢʀᴏᴜᴩ ᴡɪᴛʜ ꜰᴏʀᴜᴍꜱ/ᴛᴏᴩɪᴄꜱ]", show_alert=True)
+            else:
+                await query.answer(f"✅ {added_count} ɴᴇᴡ ɢʀᴏᴜᴘꜱ ᴀᴅᴅᴇᴅ. [ᴇxᴄʟᴜᴅᴇᴅ ɢʀᴏᴜᴩ ᴡɪᴛʜ ꜰᴏʀᴜᴍꜱ/ᴛᴏᴩɪᴄꜱ] \n📜 ʟɪᴍɪᴛ ʀᴇᴀᴄʜᴇᴅ, ᴍᴀxɪᴍᴜᴍ ɢʀᴏᴜᴩ ꜰᴏʀ ᴩʀᴇᴍɪᴜᴍ ᴜꜱᴇʀꜱ ᴏɴʟʏ.", show_alert=True)
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
 
