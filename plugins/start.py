@@ -238,7 +238,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                     if not (await db.get_user(user_id)).get("enabled", False):
                         break
                     entty = await tele_client.get_entity(gid)
-                    grop_name = getattr(entity, "title", str(gid))
+                    grop_name = entty.title if hasattr(entty, "title") else str(gid)
                 except Exception:
                     grop_name = str(gid)
                 print(f"Error sending to {grop_name}: {e}")
