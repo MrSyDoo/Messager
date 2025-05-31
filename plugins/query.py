@@ -183,7 +183,7 @@ async def cb_handler(client, query: CallbackQuery):
             [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}"),
              InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
             [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")],
-            [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="get_every")],
+            [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="get_every")]
         ]
 
         await query.message.edit_text(
