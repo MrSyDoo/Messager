@@ -216,8 +216,8 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                     await tele_client.forward_messages(
                         entity=gid,
                         messages=last_msg.id,
-                        from_peer=Config.MES_CHANNEL,
-                        reply_to=topic_id if topic_id else None
+                        from_peer=Config.MES_CHANNEL
+                     #   reply_to=topic_id if topic_id else None
                     )
                 else:
                     await tele_client.send_message(
