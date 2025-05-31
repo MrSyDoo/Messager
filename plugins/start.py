@@ -84,8 +84,10 @@ async def start_forwarding_process(client: Client, user_id: int, user: dict):
 
     for i, tele_client in enumerate(clients):
         groups = user_groups[i]
+        mee = await tele_client.get_me()
+        groupdata = await db.group.find_one({"_id": mee.id)
         if i != 0:
-            wait_time = group_data.get("interval", 300)
+            wait_time = groupdata.get("interval", 300)
             await asyncio.sleep(wait_time)
         asyncio.create_task(
             start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
