@@ -649,12 +649,15 @@ async def cb_handler(client, query: CallbackQuery):
         user_id = query.from_user.id
         user = await db.get_user(user_id)
         if not user:
-            return await query.answer("❗ User not found.", show_alert=True)
+            return await query.answer("Uꜱᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ...!", show_alert=True)
 
         index = int(query.data.split("_")[-1])
+        if index == 1:
+            return await query.answer("ɪɴᴛᴇʀᴠᴀʟ ɪꜱ ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ ꜰᴏʀ ꜰɪʀꜱᴛ ᴀᴄᴄᴏᴜɴᴛ.", show_alert=True)
+
         accounts = user.get("accounts", [])
         if index >= len(accounts):
-            return await query.answer("❗ Invalid account selected.", show_alert=True)
+            return await query.answer("ɪɴᴠᴀʟɪᴅ ᴀᴄᴄᴏᴜɴᴛ ꜱᴇʟᴇᴄᴛᴇᴅ...!", show_alert=True)
 
         session = StringSession(accounts[index]["session"])
         async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
