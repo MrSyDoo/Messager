@@ -18,7 +18,7 @@ async def settings_handler(client, message):
     user_id = message.from_user.id
     user = await db.get_user(user_id)
     if not user:
-        return await message.reply("❗ You are not registered.")
+        return await message.reply("❗ You are not registered. Click On /start")
 
     accounts = user.get("accounts", [])
     if not accounts:
@@ -33,7 +33,7 @@ async def settings_handler(client, message):
                 name = me.first_name or me.username or str(me.id)
                 btn = InlineKeyboardButton(
                     f"{name} ({me.id})",
-                    callback_data=f"choose_account_{i}"
+                    callback_data=f"everything_{i}"
                 )
                 keyboard.append([btn])
             except Exception:
@@ -61,7 +61,7 @@ async def joingroup_accounts(client: Client, message: Message):
             acc_name = f"Account {i+1} (invalid)"
         buttons.append([InlineKeyboardButton(acc_name, callback_data=f"join_group_account_{i}")])
 
-    await message.reply("👥 Choose an account to join a group:", reply_markup=InlineKeyboardMarkup(buttons))
+    await message.reply("Cʜᴏᴏꜱᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ᴛᴏ ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ :", reply_markup=InlineKeyboardMarkup(buttons))
 
 @Client.on_message(filters.command("text") & filters.private)
 async def handle_text_command(client: Client, message: Message):
@@ -70,7 +70,7 @@ async def handle_text_command(client: Client, message: Message):
     accounts = user.get("accounts", [])
 
     if not accounts:
-        return await message.reply("You have not added any account. Use /add_account first.")
+        return await message.reply("Yᴏᴜ ʜᴀᴠᴇ ɴᴏᴛ ᴀᴅᴅᴇᴅ ᴀɴʏ ᴀᴄᴄᴏᴜɴᴛ. Uꜱᴇ /add_account ꜰɪʀꜱᴛ.")
 
     # Select account with account name (if premium and has multiple accounts)
     
@@ -89,10 +89,10 @@ async def handle_text_command(client: Client, message: Message):
     try:
         cb: CallbackQuery = await client.listen(user_id, timeout=60)
     except asyncio.exceptions.TimeoutError:
-        return await message.reply("❌ Timed out. Please restart with /text")
+        return await message.reply("❌ Tɪᴍᴇ ᴏᴜᴛ. Pʟᴇᴀꜱᴇ ʀᴇꜱᴛᴀʀᴛ ᴡɪᴛʜ /text")
 
     if not cb.data.startswith("text_acc_"):
-        return await cb.answer("Invalid selection.", show_alert=True)
+        return await cb.answer("Iɴᴠᴀʟɪᴅ ꜱᴇʟᴇᴄᴛɪᴏɴ ᴛᴏ ꜱᴀᴠᴇ ᴛᴇxᴛ.", show_alert=True)
 
     acc_index = int(cb.data.split("_")[-1])
     session = accounts[acc_index]["session"]
