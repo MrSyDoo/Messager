@@ -180,13 +180,13 @@ async def cb_handler(client, query: CallbackQuery):
 
         buttons = [
             [InlineKeyboardButton("ɢʀᴜᴏᴩꜱ", callback_data=f"choose_account_{index}")],
-            [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}")],
-            [InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
+            [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}"),
+             InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
             [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")]
         ]
 
         await query.message.edit_text(
-            f"⚙️ Settings for Account {index+1}:",
+            f"ꜱᴇᴛᴛɪɴɢꜱ ꜰᴏʀ ᴀᴄᴄᴏᴜɴᴛ {index+1}:",
             reply_markup=InlineKeyboardMarkup(buttons)
         )
 
@@ -212,18 +212,13 @@ async def cb_handler(client, query: CallbackQuery):
                 limit = user.get("group_limit", FREE_GROUP) if not is_premium else 1000
                 if len(group_list) >= int(limit):
                     return await query.answer("Group limit reached.", show_alert=True)
-
-                # Get current interval from group_list if exists
                 current_interval = None
                 for g in group_list:
                     if g["id"] == group_id and "interval" in g:
                         current_interval = g["interval"]
                         break
 
-                # Default intervals depending on user type
                 default_interval = 300 if (is_premium or can_use_interval) else 7200  # 5 min or 2 hrs
-
-                # Fetch slowmode from chat info (if possible)
                 slow_mode = 0
                 try:
                     full_chat = await tg_client(GetFullChannelRequest(entity))
@@ -234,9 +229,10 @@ async def cb_handler(client, query: CallbackQuery):
                 if not slow_mode:
                     slow_mode = 0
                 prompt_text = (
-                    f"Current interval: {current_interval if current_interval is not None else default_interval} seconds\n"
-                    f"Slow mode delay in this chat: {slow_mode} seconds\n\n"
                     "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] Oʀ Sᴇɴᴅ /add Tᴏ Aᴅᴅ Gʀᴏᴜᴩ Oɴʟʏ ᴏʀ Sᴇɴᴅ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
+                    f"ꜱʟᴏᴡ ᴍᴏᴅᴇ ɪɴ ᴛʜɪꜱ ᴄʜᴀᴛ: {slow_mode} sec\n\n"
+                    f"ᴄᴜʀʀᴇɴᴛ ɪɴᴛᴇʀᴠᴀʟ: {current_interval if current_interval is not None else default_interval} seconds\n"
+                    
                 )
 
                 interval_value = None
@@ -253,7 +249,7 @@ async def cb_handler(client, query: CallbackQuery):
                     if text == "/delete":
                         group_list = [g for g in group_list if g["id"] != group_id]
                         await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
-                        await query.message.reply_text("✅ Group deleted.")
+                        await query.message.reply_text("ɢʀᴏᴜᴩ ᴅᴇʟᴇᴛᴇᴅ. ✅")
                         await prompt.delete()
                         return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
