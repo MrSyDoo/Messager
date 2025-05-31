@@ -657,7 +657,7 @@ async def cb_handler(client, query: CallbackQuery):
             return await query.answer("Uꜱᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ...!", show_alert=True)
 
         index = int(query.data.split("_")[-1])
-        if index == 1:
+        if index == 0:
             return await query.answer("ɪɴᴛᴇʀᴠᴀʟ ɪꜱ ɴᴏᴛ ᴀᴠᴀɪʟᴀʙʟᴇ ꜰᴏʀ ꜰɪʀꜱᴛ ᴀᴄᴄᴏᴜɴᴛ.", show_alert=True)
 
         accounts = user.get("accounts", [])
