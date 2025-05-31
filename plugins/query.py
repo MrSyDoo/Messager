@@ -228,7 +228,6 @@ async def cb_handler(client, query: CallbackQuery):
                         group_list = [g for g in group_list if g["id"] != group_id]
                         await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                         await query.message.reply_text("✅ Group deleted.")
-                        await query.message.delete()
                         await prompt.delete()
                         return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
@@ -369,7 +368,6 @@ async def cb_handler(client, query: CallbackQuery):
                     group_list = [g for g in group_list if g["id"] != group_id]
                     await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}})
                     await query.message.reply_text("✅ Group deleted.")
-                    # await query.message.delete()
                     return await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
                 if text == "/add":
@@ -524,7 +522,7 @@ async def cb_handler(client, query: CallbackQuery):
         await query.message.delete()
         try:
             await query.message.reply_text("Send the message you want to save.\n\n**With Tag. Timeout in 5min**")
-            user_msg = await client.listen(user_id, filters=filters.text & filters.private, timeout=300)
+            user_msg = await client.listen(user_id, timeout=300)
             msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
             await db.update_user(user_id, {"forward_message_id": msg.message_id})
             await user_msg.delete()
