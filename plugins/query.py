@@ -72,7 +72,7 @@ async def show_groups_for_account(client, message, user_id, account_index):
              InlineKeyboardButton("Aᴅᴅ Aʟʟ Gʀᴏᴜᴘꜱ", callback_data=f"add_all_groups_{account_index}")
        ])
         buttons.append([
-            InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data="back_to_accounts"),
+            InlineKeyboardButton("⇇ Gᴏ Bᴀᴄᴋ", callback_data=f"everything_{account_index}"),
             InlineKeyboardButton("↻ Rᴇꜱᴇᴛ ↻", callback_data=f"delete_all_{account_index}")
         ])
         await message.edit_text("Sᴇʟᴇᴄᴛ ʏᴏᴜʀ ɢʀᴏᴜᴩꜱ ᴛᴏ ꜰᴏʀᴡᴀʀᴅ:", reply_markup=InlineKeyboardMarkup(buttons))
@@ -199,7 +199,7 @@ async def cb_handler(client, query: CallbackQuery):
 
         accounts = user.get("accounts", [])
         if not accounts:
-            return await query.message.edit("😶 No accounts found.")
+            return await query.message.edit("No accounts found. 😑")
 
         keyboard = []
         for i, acc in enumerate(accounts):
@@ -220,7 +220,7 @@ async def cb_handler(client, query: CallbackQuery):
                     )])
 
         await query.message.edit(
-            "⚙️ Choose an account to manage settings:",
+            "Cʜᴏᴏꜱᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ᴛᴏ ᴍᴀɴᴀɢᴇ ꜱᴇᴛᴛɪɴɢꜱ:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
