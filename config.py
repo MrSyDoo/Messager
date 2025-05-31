@@ -24,6 +24,7 @@ class Config(object):
     ADMIN = [int(admin) if id_pattern.search(
         admin) else admin for admin in os.environ.get('ADMIN', '').split()]  # ⚠️ Required
 
+    MES_CHANNEL = os.environ.get("MES_CHANNEL", "")  # ⚠️ Required Username without @ [SECRET PUBLIC CHANNEL]
     LOG_CHANNEL = os.environ.get("LOG_CHANNEL", "")
     FORCE_SUB = os.environ.get("FORCE_SUB", "") # ⚠️ Required Username without @
     FLOOD = int(os.environ.get("FLOOD", '10'))
