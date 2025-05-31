@@ -40,7 +40,7 @@ async def settings_handler(client, message):
                 keyboard.append([InlineKeyboardButton(f"Account {i+1} (Invalid)", callback_data=f"choose_account_{i}")])
 
     await message.reply(
-        "⚙️ Choose an account to manage settings:",
+        "Cʜᴏᴏꜱᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ᴛᴏ ᴍᴀɴᴀɢᴇ ꜱᴇᴛᴛɪɴɢꜱ:",
         reply_markup=InlineKeyboardMarkup(keyboard)
     )
 
