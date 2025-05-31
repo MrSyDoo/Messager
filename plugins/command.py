@@ -12,6 +12,38 @@ FREE_ACCOUNT = Config.FREE_ACCOUNT
 API_HASH = Config.API_HASH
 API_ID = Config.API_ID
 
+
+@Client.on_message(filters.command("settings") & filters.private)
+async def settings_handler(client, message):
+    user_id = message.from_user.id
+    user = await db.get_user(user_id)
+    if not user:
+        return await message.reply("❗ You are not registered.")
+
+    accounts = user.get("accounts", [])
+    if not accounts:
+        return await message.reply("😶 No accounts found.")
+
+    keyboard = []
+    for i, acc in enumerate(accounts):
+        session = StringSession(acc["session"])
+        async with TelegramClient(session, Config.API_ID, Config.API_HASH) as tg_client:
+            try:
+                me = await tg_client.get_me()
+                name = me.first_name or me.username or str(me.id)
+                btn = InlineKeyboardButton(
+                    f"{name} ({me.id})",
+                    callback_data=f"choose_account_{i}"
+                )
+                keyboard.append([btn])
+            except Exception:
+                keyboard.append([InlineKeyboardButton(f"Account {i+1} (Invalid)", callback_data=f"choose_account_{i}")])
+
+    await message.reply(
+        "⚙️ Choose an account to manage settings:",
+        reply_markup=InlineKeyboardMarkup(keyboard)
+    )
+
 @Client.on_message(filters.command("joingroup") & filters.private)
 async def joingroup_accounts(client: Client, message: Message):
     user_id = message.from_user.id
