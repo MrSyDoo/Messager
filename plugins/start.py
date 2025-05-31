@@ -249,7 +249,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 break
             await asyncio.sleep(interval)
 
-    await client.send_message(user_id, "Sᴛᴏᴩᴩᴇᴅ..!")
+    await client.send_message(user_id, "Sᴛᴏᴩᴩᴇᴅ..! {index+1}")
     await db.update_user(user_id, {"forward_message_id": None})
     syd = await client.send_message(user_id, "Sᴇɴᴅɪɴɢ ꜰᴏʀᴡᴀʀᴅ ᴅᴀᴛᴀ...")
 
@@ -277,7 +277,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
     with open("forward.txt", "w", encoding="utf-8") as f:
         f.write(out)
 
-    await client.send_document(user_id, "forward.txt", caption=f"Fᴏʀᴡᴀʀᴅ ʟᴏɢꜱ")
+    await client.send_document(user_id, "forward.txt", caption=f"Fᴏʀᴡᴀʀᴅ ʟᴏɢꜱ: {index+1}")
     await db.user_messages.delete_many({"user_id": user_id})
     await syd.delete()
 
