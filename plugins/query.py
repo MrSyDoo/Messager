@@ -373,9 +373,10 @@ async def cb_handler(client, query: CallbackQuery):
                 slow_mode = 0
 
             prompt_text = (
-                f"Current interval: {current_interval if current_interval is not None else default_interval} seconds\n"
-                f"Slow mode delay in this chat: {slow_mode} seconds\n\n"
                 "Pʟᴇᴀꜱᴇ Sᴇɴᴅ Iɴᴛᴇʀᴠᴀʟ (ɪɴ ꜱᴇᴄᴏɴᴅꜱ)[ᴩʀᴇᴍɪᴜᴍ] ᴏʀ Sᴇɴᴅ /add Tᴏ Sᴋɪᴩ (ᴏɴʟʏ ᴀᴅᴅ ᴛʜᴇ ɢʀᴏᴜᴩ) ᴏʀ /delete Tᴏ Rᴇᴍᴏᴠᴇ Tʜɪꜱ Gʀᴏᴜᴩ.\n\nTɪᴍᴇᴏᴜᴛ ɪɴ 30 ꜱᴇᴄᴏɴᴅꜱ."
+               f"ꜱʟᴏᴡ ᴍᴏᴅᴇ ɪɴ ᴛʜɪꜱ ᴄʜᴀᴛ: {slow_mode} sec\n\n"
+               f"ᴄᴜʀʀᴇɴᴛ ɪɴᴛᴇʀᴠᴀʟ: {current_interval if current_interval is not None else default_interval} seconds\n"
+                    
             )
 
             interval_value = None
