@@ -483,6 +483,77 @@ async def cb_handler(client, query: CallbackQuery):
             await db.group.update_one({"_id": session_user_id}, {"$set": {"groups": group_list}}, upsert=True)
         await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
+    elif query.data.startswith("join_group_account_"):
+        user_id = query.from_user.id
+        user = await db.get_user(user_id)
+        if not user:
+            return await query.answer("❗ ᴜꜱᴇʀ ɴᴏᴛ ꜰᴏᴜɴᴅ.", show_alert=True)
+
+        index = int(query.data.split("_")[-1])
+        accounts = user.get("accounts", [])
+        if index >= len(accounts):
+            return await query.answer("❗ ɪɴᴠᴀʟɪᴅ ᴀᴄᴄᴏᴜɴᴛ ꜱᴇʟᴇᴄᴛᴇᴅ.", show_alert=True)
+
+        prompt = await query.message.reply(
+            "🔗 ꜱᴇɴᴅ ᴛʜᴇ **ɢʀᴏᴜᴘ** ʟɪɴᴋ(ꜱ) ʏᴏᴜ ᴡᴀɴᴛ ᴛʜɪꜱ ᴀᴄᴄᴏᴜɴᴛ ᴛᴏ ᴊᴏɪɴ.\n\nʏᴏᴜ ᴄᴀɴ ꜱᴇɴᴅ **ᴍᴜʟᴛɪᴘʟᴇ ʟɪɴᴋꜱ** ꜱᴇᴘᴀʀᴀᴛᴇᴅ ʙʏ ꜱᴘᴀᴄᴇ ᴏʀ ɴᴇᴡ ʟɪɴᴇꜱ.\nᴏɴʟʏ ɢʀᴏᴜᴘꜱ ᴀʀᴇ ꜱᴜᴘᴘᴏʀᴛᴇᴅ.\n\nᴏʀ ꜱᴇɴᴅ /cancel ᴛᴏ ᴀʙᴏʀᴛ.",
+            parse_mode=enums.ParseMode.MARKDOWN
+        )
+
+        try:
+            response = await client.listen(
+                chat_id=user_id,
+                filters=filters.text,
+                timeout=60
+            )
+            text = response.text.strip()
+
+            if text.lower() == "/cancel":
+                await prompt.delete()
+                return await query.message.reply("❌ ᴄᴀɴᴄᴇʟʟᴇᴅ.")
+
+            links = [l.strip() for l in text.split() if l.strip()]
+
+            session = StringSession(accounts[index]["session"])
+            async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
+                results = []
+
+                for link in links:
+                    try:
+                        parsed = urlparse(link)
+                        path = parsed.path.strip("/")
+
+                        if path.startswith("joinchat/"):
+                            invite_hash = path.split("joinchat/")[-1]
+                            updates = await userbot(ImportChatInviteRequest(invite_hash))
+                            entity = updates.chats[0]
+                        elif path.startswith("+"):
+                            invite_hash = path[1:]
+                            updates = await userbot(ImportChatInviteRequest(invite_hash))
+                            entity = updates.chats[0]
+                        else:
+                            entity = await userbot.get_entity(link)
+                            await userbot(JoinChannelRequest(entity))
+
+                        if isinstance(entity, Channel) and entity.megagroup:
+                            results.append(f"✅ ᴊᴏɪɴᴇᴅ: `{link}`")
+                        elif isinstance(entity, Chat):
+                            results.append(f"✅ ᴊᴏɪɴᴇᴅ: `{link}`")
+                        else:
+                            results.append(f"⚠️ ɴᴏᴛ ᴀ ɢʀᴏᴜᴘ: `{link}`")
+
+                    except Exception as e:
+                        results.append(f"❌ ꜰᴀɪʟᴇᴅ: `{link}`\n`{e}`")
+
+                await prompt.delete()
+                await query.message.reply(
+                    "\n\n".join(results),
+                    parse_mode=enums.ParseMode.MARKDOWN,
+                    disable_web_page_preview=True
+                )
+
+        except ListenerTimeout:
+            await prompt.delete()
+            await query.message.reply("⏱️ ᴛɪᴍᴇᴏᴜᴛ. ᴘʟᴇᴀꜱᴇ ᴛʀʏ ᴀɢᴀɪɴ.")
 
 
     elif data.startswith("delete_all_"):
@@ -500,73 +571,6 @@ async def cb_handler(client, query: CallbackQuery):
            # await query.message.delete()
             await show_groups_for_account(client, query.message, query.from_user.id, account_index)
 
-    elif query.data.startswith("join_group_account_"):
-        user_id = query.from_user.id
-        user = await db.get_user(user_id)
-        if not user:
-            return await query.answer("❗ User not found.", show_alert=True)
-
-        index = int(query.data.split("_")[-1])
-        accounts = user.get("accounts", [])
-        if index >= len(accounts):
-            return await query.answer("❗ Invalid account selected.", show_alert=True)
-
-        prompt = await query.message.reply(
-            "🔗 Send the **group** link you want this account to join.\n\nOnly groups are supported.\n\nOr send /cancel to abort.",
-            parse_mode=enums.ParseMode.MARKDOWN
-        )
-
-        try:
-            response = await client.listen(
-                chat_id=user_id,
-                filters=filters.text,
-                timeout=60
-            )
-            text = response.text.strip()
-
-            if text.lower() == "/cancel":
-                await prompt.delete()
-                return await query.message.reply("❌ Cancelled.")
-
-            link = text
-
-            session = StringSession(accounts[index]["session"])
-            async with TelegramClient(session, Config.API_ID, Config.API_HASH) as userbot:
-                try:
-                    
-                    parsed = urlparse(link)
-                    path = parsed.path.strip("/")  # remove leading/trailing slashes
-
-                    if path.startswith("joinchat/"):
-                        invite_hash = path.split("joinchat/")[-1]
-                        updates = await userbot(ImportChatInviteRequest(invite_hash))
-                        entity = updates.chats[0]
-                    elif path.startswith("+"):
-                        invite_hash = path[1:]
-                        updates = await userbot(ImportChatInviteRequest(invite_hash))
-                        entity = updates.chats[0]
-                    else:
-                        entity = await userbot.get_entity(link)
-                        await userbot(JoinChannelRequest(entity))
-                        
-                    # Ensure it's a group (not a channel or private chat)
-                    if isinstance(entity, Channel) and entity.megagroup:
-                        await prompt.delete()
-                        await query.message.reply("✅ Successfully joined the group.")
-                    elif isinstance(entity, Chat):
-                        await prompt.delete()
-                        await query.message.reply("✅ Successfully joined the group.")
-                    else:
-                        await prompt.delete()
-                        await query.message.reply("⚠️ That link is not a group. Only groups are supported.")
-
-                except Exception as e:
-                    await prompt.delete()
-                    await query.message.reply(f"❌ Failed to join group:\n`{e}`", parse_mode=enums.ParseMode.MARKDOWN)
-
-        except ListenerTimeout:
-            await prompt.delete()
-            await query.message.reply("⏱️ Timeout. Please try again.")
 
     elif data == "help":
 
