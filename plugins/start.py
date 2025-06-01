@@ -138,7 +138,10 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
     groupdata = await db.group.find_one({"_id": mee.id})
     if index != 0:
         wait_time = groupdata.get("interval", 600)
-        await asyncio.sleep(wait_time)
+        for _ in range(wait_time // 1):
+            if not (await db.get_user(user_id)).get("enabled", False):
+                break
+            await asyncio.sleep(1)
         await client.send_message(user_id, f"Sᴛᴀʀɪɴɢ {index + 1}")
     usr = await client.get_users(user_id)
     user_nam = f"For @{usr.username}" if usr.username else ""
