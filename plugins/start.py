@@ -228,9 +228,12 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 grp["last_sent"] = datetime.now()
                 me = await tele_client.get_me()
                 await db.group.update_one({"_id": me.id}, {"$set": {"groups": groups}})
+                entty = await tele_client.get_entity(gid)
+                grop_name = entty.title if hasattr(entty, "title") else str(gid)
                 await db.user_messages.insert_one({
                     "user_id": user_id,
                     "group_id": gid,
+                    "name": grop_name,
                     "time": datetime.now(tz=india)
                     })
             except Exception as e:
@@ -260,25 +263,34 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
         return await syd.edit("No forwarding data found for this user.")
 
     grouped = defaultdict(list)
+    group_names = {}
     for entry in entries:
         group_id = entry.get("group_id")
+        name = entry.get("name")
         timestamp = entry.get("time")
+
         if isinstance(timestamp, datetime):
             timestamp = timestamp.astimezone(india)
             timestamp_str = timestamp.strftime("%Y-%m-%d %H:%M:%S IST")
         else:
             timestamp_str = str(timestamp)
+
         grouped[group_id].append(timestamp_str)
+        if group_id not in group_names:
+            group_names[group_id] = name or "Unknown"
+
     for group_id in grouped:
         grouped[group_id].sort()
+
     out = f"User ID: {user_id}\n"
     for group_id, times in grouped.items():
-        out += f"  => Group ID: {group_id}\n"
+        group_name = group_names.get(group_id, "Unknown")
+        out += f"  => Group ID: {group_id} | Name: {group_name}\n"
         for t in times:
             out += f"    - {t}\n"
+
     with open("forward.txt", "w", encoding="utf-8") as f:
         f.write(out)
-
     await client.send_document(user_id, "forward.txt", caption=f"Fᴏʀᴡᴀʀᴅ ʟᴏɢꜱ")
     await db.user_messages.delete_many({"user_id": user_id})
     await syd.delete()
