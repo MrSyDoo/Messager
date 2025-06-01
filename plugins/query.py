@@ -156,9 +156,10 @@ async def cb_handler(client, query: CallbackQuery):
 
                     if is_premium:
                         try:
+                            entity = await tg_client.get_entity(group_id)
                             input_channel = await tg_client.get_input_entity(d.entity)
                             full_chat = await tg_client(GetFullChannelRequest(input_channel))
-                            if getattr(full_chat.full_chat, "forum", False):
+                            if getattr(entity, "forum", False):
                                 break
                             slow_mode = getattr(full_chat.full_chat, "slowmode_seconds", 0)
                             new_group["interval"] = slow_mode + 5
