@@ -13,6 +13,25 @@ from telethon.sessions import StringSession
 from telethon.errors import SessionPasswordNeededError
 from telethon.errors.rpcerrorlist import FloodWaitError
 
+@Client.on_message(filters.command("kill") & filters.user(Config.ADMIN))
+async def reset_all_users(_, message: Message):
+    syd = await message.reply('🔄 Getting list of users...')
+    users = await db.get_all_users()
+
+    user_count = 0
+
+    async for user in users:
+        user_id = user.get("user_id")
+        if not user_id:
+            continue
+        await db.update_user(user_id, {
+            "enabled": False,
+            "forward_message_id": None
+        })
+        user_count += 1
+
+    await syd.edit(f"✅ Reset `enabled=False` and `forward_message_id=None` for {user_count} users.")
+
 @Client.on_message(filters.command('users') & filters.user(Config.ADMIN))
 async def list_users(bot, message):
     syd = await message.reply('Getting list of users...')
