@@ -22,10 +22,10 @@ async def settings_handler(client, message):
 
     accounts = user.get("accounts", [])
     if not accounts:
-        keyboard = InlineKeyboardMarkup(
+        keybord = InlineKeyboardMarkup(
             [[InlineKeyboardButton("Aᴅᴅ Aᴄᴄᴏᴜɴᴛ", callback_data="add_account")]]
         )
-        return await message.reply("No accounts found. 😑", reply_markup=keyboard)
+        return await message.reply("No accounts found. 😑", reply_markup=keybord)
 
     keyboard = []
     for i, acc in enumerate(accounts):
