@@ -22,7 +22,10 @@ async def settings_handler(client, message):
 
     accounts = user.get("accounts", [])
     if not accounts:
-        return await message.reply("😶 No accounts found.")
+        keyboard = InlineKeyboardMarkup(
+            [[InlineKeyboardButton("Aᴅᴅ Aᴄᴄᴏᴜɴᴛ", callback_data="add_account")]]
+        )
+        return await message.reply("No accounts found. 😑", reply_markup=keyboard)
 
     keyboard = []
     for i, acc in enumerate(accounts):
@@ -39,6 +42,8 @@ async def settings_handler(client, message):
             except Exception:
                 keyboard.append([InlineKeyboardButton(f"Account {i+1} (Invalid)", callback_data=f"choose_account_{i}")])
 
+
+    keyboard.append([InlineKeyboardButton('Aᴅᴅ Aᴄᴄᴏᴜɴᴛ', callback_data='add_account')])
     await message.reply(
         "Cʜᴏᴏꜱᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ᴛᴏ ᴍᴀɴᴀɢᴇ ꜱᴇᴛᴛɪɴɢꜱ:",
         reply_markup=InlineKeyboardMarkup(keyboard)
