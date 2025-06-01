@@ -155,7 +155,7 @@ async def cb_handler(client, query: CallbackQuery):
                     new_group = {"id": d.id, "last_sent": datetime.min}
                     entity = await tg_client.get_entity(d.id)
                     if getattr(entity, "forum", False):
-                        break
+                        continue
                     if is_premium:
                         try:
                             input_channel = await tg_client.get_input_entity(d.entity)
