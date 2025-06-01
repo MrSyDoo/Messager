@@ -208,7 +208,6 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
             last_sent = grp.get("last_sent", datetime.min)
             total_wait = interval - (datetime.now() - last_sent).total_seconds()
             if total_wait > 0:
-                # Wait total_wait seconds but check every 1 second if enabled
                 for _ in range(int(total_wait)):
                     if not (await db.get_user(user_id)).get("enabled", False):
                         break
@@ -247,7 +246,7 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
                 except Exception:
                     grop_name = str(gid)
                 print(f"Error sending to {grop_name}: {e}")
-                await client.send_message(user_id, f"Error sending to {grop_name}:\n{e} \nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop.[Never Let The Account Get Banned Due To Spam]")
+                await client.send_message(user_id, f"Error sending to {grop_name}({gid}):\n{e} \n\nSend This Message To The Admin, To Take Proper Action, Forwarding Won't Stop. [Never Let The Account Get Banned Due To Spam]")
 
         for _ in range(total_slep // interval):
             if not (await db.get_user(user_id)).get("enabled", False):
