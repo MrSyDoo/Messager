@@ -84,11 +84,6 @@ async def start_forwarding_process(client: Client, user_id: int, user: dict):
 
     for i, tele_client in enumerate(clients):
         groups = user_groups[i]
-        mee = await tele_client.get_me()
-        groupdata = await db.group.find_one({"_id": mee.id})
-        if i != 0:
-            wait_time = groupdata.get("interval", 300)
-            await asyncio.sleep(wait_time)
         asyncio.create_task(
             start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, i)
         )
@@ -139,7 +134,11 @@ async def start_forwarding_process(client: Client, user_id: int, user: dict):
 
 
 async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_use_interval, client, index):
-    if index > 0:
+    mee = await tele_client.get_me()
+    groupdata = await db.group.find_one({"_id": mee.id})
+    if index != 0:
+        wait_time = groupdata.get("interval", 600)
+        await asyncio.sleep(wait_time)
         await client.send_message(user_id, f"Sᴛᴀʀɪɴɢ {index + 1}")
     usr = await client.get_users(user_id)
     user_nam = f"For @{usr.username}" if usr.username else ""
