@@ -204,7 +204,10 @@ async def cb_handler(client, query: CallbackQuery):
 
         accounts = user.get("accounts", [])
         if not accounts:
-            return await query.message.edit("No accounts found. 😑")
+            keybord = InlineKeyboardMarkup(
+                [[InlineKeyboardButton("Aᴅᴅ Aᴄᴄᴏᴜɴᴛ", callback_data="add_account")]]
+            )
+            return await query.message.edit_text("No accounts found. 😑", reply_markup=keybord)
 
         keyboard = []
         for i, acc in enumerate(accounts):
