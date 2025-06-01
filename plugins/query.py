@@ -181,12 +181,12 @@ async def cb_handler(client, query: CallbackQuery):
         user = await db.get_user(query.from_user.id)
         accounts = user.get("accounts", [])
         if index >= len(accounts):
-            return await query.answer("❗ Invalid account index.", show_alert=True)
+            return await query.answer("❗ Invalid account index. Click On /Settings", show_alert=True)
 
         buttons = [
-            [InlineKeyboardButton("ɢʀᴏᴜᴩꜱ", callback_data=f"choose_account_{index}")],
+            [InlineKeyboardButton("ꜱᴇᴛ ɢʀᴏᴜᴩ", callback_data=f"choose_account_{index}")],
             [InlineKeyboardButton("ᴊᴏɪɴ ᴀ ɢʀᴏᴜᴩ", callback_data=f"join_group_account_{index}"),
-             InlineKeyboardButton("ꜱᴇᴛ ɪɴᴛᴇʀᴠᴀʟ", callback_data=f"set_interval_account_{index}")],
+             InlineKeyboardButton("ꜱᴛᴀʀᴛ ᴅᴇʟᴀʏ", callback_data=f"set_interval_account_{index}")],
             [InlineKeyboardButton("ᴅᴇʟᴇᴛᴇ ᴀᴄᴄᴏᴜɴᴛ", callback_data=f"choose_delete_{index}")],
             [InlineKeyboardButton("ʙᴀᴄᴋ", callback_data="get_every")]
         ]
@@ -223,7 +223,7 @@ async def cb_handler(client, query: CallbackQuery):
                         f"Account {i+1} (Invalid)",
                         callback_data=f"choose_account_{i}"
                     )])
-
+        keyboard.append([InlineKeyboardButton('Aᴅᴅ Aᴄᴄᴏᴜɴᴛ', callback_data='add_account')])
         await query.message.edit(
             "Cʜᴏᴏꜱᴇ ᴀɴ ᴀᴄᴄᴏᴜɴᴛ ᴛᴏ ᴍᴀɴᴀɢᴇ ꜱᴇᴛᴛɪɴɢꜱ:",
             reply_markup=InlineKeyboardMarkup(keyboard)
