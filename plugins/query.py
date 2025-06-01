@@ -148,19 +148,18 @@ async def cb_handler(client, query: CallbackQuery):
                 if added_count + len(existing_group_ids) >= limit:
                     break
 
-                if d.is_group: #or (d.is_channel and getattr(d.entity, "megagroup", False)):
+                if d.is_group or (d.is_channel and getattr(d.entity, "megagroup", False)):
                     if d.id in existing_group_ids:
                         continue  # Already added
 
                     new_group = {"id": d.id, "last_sent": datetime.min}
-
+                    entity = await tg_client.get_entity(d.id)
+                    if getattr(entity, "forum", False):
+                        break
                     if is_premium:
                         try:
-                            entity = await tg_client.get_entity(group_id)
                             input_channel = await tg_client.get_input_entity(d.entity)
                             full_chat = await tg_client(GetFullChannelRequest(input_channel))
-                            if getattr(entity, "forum", False):
-                                break
                             slow_mode = getattr(full_chat.full_chat, "slowmode_seconds", 0)
                             new_group["interval"] = slow_mode + 5
                         except Exception as e:
