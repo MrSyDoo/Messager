@@ -601,14 +601,32 @@ async def cb_handler(client, query: CallbackQuery):
         try:
             await query.message.reply_text("Send the message you want to save.\n\n**With Tag. Timeout in 5min**")
             user_msg = await client.listen(user_id, timeout=300)
-            msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
+            try:
+                msg = await user_msg.forward(chat_id=Config.MES_CHANNEL)
+            except PeerIdInvalid:
+                error_text = "❌ Unable to forward message. `MES_CHANNEL` is invalid or bot is not a member."
+                await client.send_message(user_id, error_text)
+
+                for admin_id in Config.ADMIN:
+                    await client.send_message(
+                        admin_id,
+                        f"⚠️ PeerIdInvalid error for user `{user_id}` while trying to forward to `{Config.MES_CHANNEL}`.\n"
+                        f"Make sure the bot is added and has permission in the channel."
+                    )
+                return
             await db.update_user(user_id, {"forward_message_id": msg.id})
             await user_msg.delete()
             await client.send_message(user_id, "Message saved with tag. Starting forwarding...")
             await start_forwarding_process(client, user_id, user)
         except asyncio.exceptions.TimeoutError:
             await client.send_message(user_id, "❌ Timed out. Please start again using /run.")
-
+        except Exception as e:
+            await client.send_message(user_id, f"❌ Unexpected error occurred:\n`{str(e)}`")
+            for admin_id in Config.ADMIN:
+                await client.send_message(
+                    admin_id,
+                    f"🚨 Unexpected error for user `{user_id}`:\n`{str(e)}`"
+                )  
     elif data == "add_account":
         user_id = query.from_user.id
         user = await db.get_user(user_id)
