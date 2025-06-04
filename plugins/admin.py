@@ -21,7 +21,7 @@ async def reset_all_users(_, message: Message):
     user_count = 0
 
     async for user in users:
-        user_id = user.get("user_id")
+        user_id = user.get("_id")
         if not user_id:
             continue
         await db.update_user(user_id, {
