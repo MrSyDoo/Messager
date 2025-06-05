@@ -204,7 +204,8 @@ async def start_forwarding_loop(tele_client, user_id, groups, is_premium, can_us
         for grp in groups:
             gid = grp["id"]
             topic_id = grp.get("topic_id")
-            interval = grp.get("interval", 300 if (is_premium or can_use_interval) else 7200)
+            intervl = grp.get("interval", 300)
+            interval = intervl if (is_premium or can_use_interval) else 7200
             last_sent = grp.get("last_sent", datetime.min)
             total_wait = interval - (datetime.now() - last_sent).total_seconds()
             if total_wait > 0:
