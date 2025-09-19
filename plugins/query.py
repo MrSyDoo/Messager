@@ -354,6 +354,8 @@ async def cb_handler(client, query: CallbackQuery):
 
                     topic_buttons = []
                     for topic in topics.topics:
+                        if not hasattr(topic, "title"):
+                            continue
                         selected = " ✅" if topic.id == selected_topic else ""
                         topic_buttons.append([
                             InlineKeyboardButton(
